@@ -10,7 +10,7 @@ sidebar:
     permalink: "~ /projects/warlock/.*"
     sort: order
   - widget: cta
-    href: https://github.com/BitsNBytes25/Warlock
+    href: https://github.com/hathaway3/Warlock
     text: View on GitHub
 image:
   src: media/warlock-host-files.webp

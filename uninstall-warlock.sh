@@ -5,7 +5,7 @@
 # @author Charlie Powell <cdp1337@bitsnbytes.dev>
 # @license AGPLv3.0
 # @see https://warlock.nexus
-# @source https://github.com/BitsNBytes25/Warlock
+# @source https://github.com/hathaway3/Warlock
 #
 
 SERVICE_UNIT_PATH="/etc/systemd/system/warlock.service"

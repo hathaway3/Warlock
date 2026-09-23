@@ -10,7 +10,7 @@ sidebar:
     sort: order
     title: Project Navigation
   - widget: cta
-    href: https://github.com/BitsNBytes25/Warlock
+    href: https://github.com/hathaway3/Warlock
     text: View on GitHub
 image:
   src: media/warlock-empty-dashboard.webp
@@ -45,7 +45,7 @@ chmod a+rx /var/www
 cd /var/www
 
 # Checkout Warlock and run installer
-git clone https://github.com/BitsNBytes25/Warlock.git
+git clone https://github.com/hathaway3/Warlock.git
 cd Warlock
 ./install-warlock.sh
 ```

@@ -10,7 +10,7 @@
 # @author Charlie Powell <cdp1337@bitsnbytes.dev>
 # @license AGPLv3.0
 # @see https://warlock.nexus
-# @source https://github.com/BitsNBytes25/Warlock
+# @source https://github.com/hathaway3/Warlock
 #
 
 
@@ -462,25 +462,16 @@ Warlock is provided 'as-is', without any express or implied warranty
   (which in short means that if you modify and distribute the code, you must also
   distribute your modifications under the same license and provide attribution).
 
-Warlock is offered as free software, but a monthly licensing option is encouraged
-  to support the project and fund continued development.
-  (@todo implement licensing, but meanwhile https://ko-fi.com/bitsandbytes is our donation site.)
+Warlock is offered as free software under the AGPLv3 license.
 
-Metrics of the server are collected to help improve the project, including:
- * Server OS type and version
- * Warlock version
- * Random Warlock installation identifier
- * Country and approximate region of server
- * Server events such as start or game installation
+Telemetry & Analytics:
+  Remote analytics and telemetry reporting to upstream servers are disabled
+  in this fork. No tracking data or telemetry is transmitted to upstream services.
 
-Metrics such as community information, email addresses, user activity,
-  or personally identifiable information are NOT collected.
-
-For more information, please refer to
- * Warlock Documentation: (@todo link to warlock.nexus)
- * Discord: https://discord.gg/jyFsweECPb
- * Mastodon: https://social.bitsnbytes.dev/@sitenews
- * Bits N Bytes: https://bitsnbytes.dev
+For more information, please refer to:
+ * Project Repository: https://github.com/hathaway3/Warlock
+ * Issue Tracker & Bug Reports: https://github.com/hathaway3/Warlock/issues
+ * Documentation: https://github.com/hathaway3/Warlock#readme
 
 Do you agree to these terms? (y/N)
 EOF

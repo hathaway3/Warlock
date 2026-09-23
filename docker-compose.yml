@@ -1,6 +1,6 @@
 services:
   warlock:
-    image: bitsnbytes25/warlock:latest
+    image: hathaway3/warlock:latest
     container_name: warlock
     ports:
       - "3077:3077"

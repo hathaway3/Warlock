@@ -361,7 +361,7 @@ function package_install (){
 		zypper install -y $*
 	else
 		echo 'package_install: Unsupported or unknown OS' >&2
-		echo 'Please report this at https://github.com/eVAL-Agency/ScriptsCollection/issues' >&2
+		echo 'Please report this at https://github.com/hathaway3/Warlock/issues' >&2
 		exit 1
 	fi
 }

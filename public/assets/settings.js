@@ -402,7 +402,7 @@ settingsNexusRegister.addEventListener('click', () => {
 });
 
 // Pull the latest version for reference.
-fetch('https://api.github.com/repos/BitsNBytes25/Warlock/tags').then(
+fetch('https://api.github.com/repos/hathaway3/Warlock/tags').then(
 	response => response.json()
 ).then(data => {
 	if (!data || !data.length) {

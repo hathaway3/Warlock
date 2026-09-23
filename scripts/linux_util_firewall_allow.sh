@@ -218,7 +218,7 @@ function firewall_allow() {
 		return 1
 	else
 		echo "firewall_allow: Unsupported or unknown firewall" >&2
-		echo 'Please report this at https://github.com/cdp1337/ScriptsCollection/issues' >&2
+		echo 'Please report this at https://github.com/hathaway3/Warlock/issues' >&2
 		return 1
 	fi
 }

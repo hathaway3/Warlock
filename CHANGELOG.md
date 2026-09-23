@@ -114,7 +114,7 @@ Initial build of Warlock.
 
 ## Development Notes
 
-This project is under active development. For the latest features and bug fixes, please refer to the [main branch](https://github.com/BitsNBytes25/Warlock).
+This project is under active development. For the latest features and bug fixes, please refer to the [main branch](https://github.com/hathaway3/Warlock).
 
 ### Version History Summary
 
@@ -122,8 +122,8 @@ This project is under active development. For the latest features and bug fixes,
 - **v1.2.1**: Fixes for installation on non-https sites
 - **v1.0.1**: Initial release with core functionality
 
-[1.2.2]: https://github.com/BitsNBytes25/Warlock/tree/v1.2.2
-[1.2.1]: https://github.com/BitsNBytes25/Warlock/tree/v1.2.1
-[1.2.0]: https://github.com/BitsNBytes25/Warlock/tree/v1.2.0
-[1.0.1]: https://github.com/BitsNBytes25/Warlock/tree/v1.0.1
-[1.0.0]: https://github.com/BitsNBytes25/Warlock/tree/v1.0.0
+[1.2.2]: https://github.com/hathaway3/Warlock/tree/v1.2.2
+[1.2.1]: https://github.com/hathaway3/Warlock/tree/v1.2.1
+[1.2.0]: https://github.com/hathaway3/Warlock/tree/v1.2.0
+[1.0.1]: https://github.com/hathaway3/Warlock/tree/v1.0.1
+[1.0.0]: https://github.com/hathaway3/Warlock/tree/v1.0.0

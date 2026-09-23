@@ -4,7 +4,7 @@ Warlock is a "bring-your-own-server" game manager that supports managing your fl
 
 * [Jump to Quick Install](#production-install)
 * [Games Supported](#games-supported)
-* [New Game Template](https://github.com/BitsNBytes25/Warlock-Game-Template)
+* New Game Template *(To-Do / Placeholder)*
 
 ## Features
 
@@ -201,13 +201,13 @@ This will install Node and all required dependencies, configure Nginx, and set u
 Warlock can be run as a Docker container, but an nginx reverse proxy is recommended to handle SSL termination.
 
 ```bash
-docker pull bitsnbytes25/warlock:latest
+docker pull hathaway3/warlock:latest
 docker run \
   --name warlock \
   -p 3077:3077 \
   -v warlock_data:/app/data \
   -v warlock_ssh:/home/warlock/.ssh \
-  bitsnbytes25/warlock:latest
+  hathaway3/warlock:latest
 ```
 
 ## Supported Platforms
@@ -290,7 +290,7 @@ with each instance being configurable and manageable separately.
 
 _All game names, logos, and artwork shown above are the property of their respective owners and are used here solely to identify the software Warlock can manage. See [Trademarks and Legal Disclaimers](#trademarks-and-legal-disclaimers)._
 
-To add a new game, [check out the Template Repo](https://github.com/BitsNBytes25/Warlock-Game-Template)
+To add a new game, check out the Game Template documentation *(To-Do: fork template repository)*
 for example code and instructions on getting started!
 
 Most games utilize the [Warlock Manager](https://github.com/BitsNBytes25/Warlock-Manager)
@@ -318,7 +318,7 @@ remote: Enumerating objects: 3, done.
 remote: Counting objects: 100% (3/3), done.
 remote: Total 3 (delta 2), reused 3 (delta 2), pack-reused 0 (from 0)
 Unpacking objects: 100% (3/3), 544 bytes | 544.00 KiB/s, done.
-From https://github.com/BitsNBytes25/Warlock
+From https://github.com/hathaway3/Warlock
    8b9c069..b9e5c0c  main       -> origin/main
 
 Available remote branches:
@@ -332,11 +332,11 @@ Available remote branches:
 Select branch number to switch/upgrade (default: main): 
 Using current branch: main
 Checking for updates on current branch...
-From https://github.com/BitsNBytes25/Warlock
+From https://github.com/hathaway3/Warlock
  * branch            main       -> FETCH_HEAD
 Stopping Warlock service...
 Pulling latest changes...
-From https://github.com/BitsNBytes25/Warlock
+From https://github.com/hathaway3/Warlock
  * branch            main       -> FETCH_HEAD
 Updating 8b9c069..b9e5c0c
 Fast-forward
@@ -349,25 +349,20 @@ Running installer to apply any necessary updates...
 The updater will handle switching branches (if requested) and running the installer in update mode
 to complete the upgrade process.
 
-## Links and Contact
+## Support & Issue Reporting
 
-* [Volleyball coach-turned-developer Micah](https://micahtml.com/)
-* [Bits n Bytes Community](https://bitsnbytes.dev)
-* [Donate to this project](https://ko-fi.com/bitsandbytes)
-* [Join our Discord](https://discord.gg/jyFsweECPb)
-* [Follow us on Mastodon](https://social.bitsnbytes.dev/@sitenews)
+* [Project Repository](https://github.com/hathaway3/Warlock)
+* [Issue Tracker & Bug Reports](https://github.com/hathaway3/Warlock/issues)
+* Community Discord: *(To-Do / Placeholder)*
+* Social / Fediverse: *(To-Do / Placeholder)*
+* Donations & Sponsorship: *(To-Do / Placeholder)*
 
+> [!IMPORTANT]
+> This repository is an independently maintained fork with extensive modifications. Please submit all questions, feedback, and bug reports directly to this fork's [Issue Tracker](https://github.com/hathaway3/Warlock/issues). Do **not** contact or report bugs to the upstream parent project or original authors.
 
-## Analytics Collection
+## Analytics & Telemetry
 
-To help improve Warlock, we collect some anonymous analytics data.
-
-This includes:
-
-* Version of Warlock installed
-* Server OS and version
-* Games installed
-* Approximate geolocation of server, (country and approximate area).
+Remote analytics and telemetry reporting to upstream servers (e.g. `metrics.eval.bz`) have been disabled in this fork. No tracking data or telemetry is transmitted to upstream services.
 
 ## AI / LLM Disclaimer
 
