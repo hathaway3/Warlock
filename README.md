@@ -288,6 +288,8 @@ with each instance being configurable and manageable separately.
 [![VEIN](https://github.com/BitsNBytes25/VEIN-Dedicated-Server/blob/main/media/vein-128x128.png?raw=true)](https://github.com/BitsNBytes25/VEIN-Dedicated-Server)
 [![Windrose](https://github.com/BitsNBytes25/Windrose-Installer/blob/main/media/windrose-icon.webp?raw=true)](https://github.com/BitsNBytes25/Windrose-Installer)
 
+_All game names, logos, and artwork shown above are the property of their respective owners and are used here solely to identify the software Warlock can manage. See [Trademarks and Legal Disclaimers](#trademarks-and-legal-disclaimers)._
+
 To add a new game, [check out the Template Repo](https://github.com/BitsNBytes25/Warlock-Game-Template)
 for example code and instructions on getting started!
 
@@ -370,3 +372,25 @@ This includes:
 ## AI / LLM Disclaimer
 
 This fork of Warlock exclusively uses AI development tools like **Antigravity CLI** and **Claude Code** for its engineering, architectural enhancements, refactoring, test suite development, and ongoing maintenance.
+
+## Trademarks and Legal Disclaimers
+
+Warlock is an independent, community-developed project. It is **not affiliated with, endorsed by, sponsored by, or otherwise officially connected to** the game developers, publishers, or any other third party listed below. All references to third-party games, services, and trademarks are for identification purposes only and do not imply any affiliation, endorsement, or sponsorship.
+
+The following are trademarks of their respective owners:
+
+* **ARK: Survival Ascended** — a trademark of Studio Wildcard.
+* **Arma 3** — a trademark of Bohemia Interactive a.s.
+* **Hytale** — a trademark of Hypixel Studios (Hypixel Studios Canada Inc.).
+* **Minecraft** — a trademark of Mojang AB and Microsoft Corporation.
+* **Palworld** — PALWORLD® is a registered trademark of Pocketpair, Inc.
+* **Project Zomboid** — a trademark of The Indie Stone.
+* **Valheim** — a trademark of Iron Gate Studio and/or Coffee Stain.
+* **VEIN** — a trademark of Ramjet Studios.
+* **Windrose** — a trademark of Kraken Express.
+
+Game logos, icons, artwork, and screenshots displayed in Warlock (in this README, the web interface, and the documentation) are the property of their respective owners and are used solely to identify the software that Warlock can manage. Warlock does not redistribute game binaries or content; installing a game requires, and is subject to, the applicable game's license and terms of service, which you must obtain and comply with separately.
+
+Other third-party names and products referenced in Warlock or its documentation — including **Steam** (Valve Corporation), **Proxmox VE** (Proxmox Server Solutions GmbH), **Nitrado**, operating system names and logos (Ubuntu/Canonical, Debian, Red Hat/RHEL, SUSE, Fedora, Arch Linux, Rocky, FreeBSD, Linux Mint, macOS/Apple), **Node.js** (OpenJS Foundation), **Docker** (Docker, Inc.), **Nginx**, **systemd**, **certbot** (Electronic Frontier Foundation), **React** (Meta Platforms), **TypeScript** (Microsoft Corporation), **Xterm.js**, **CodeMirror**, and **W3C** — are trademarks or registered trademarks of their respective owners.
+
+All other product names, logos, and brands referenced in this repository are the property of their respective owners. Use of these names, logos, and brands does not imply endorsement by their owners.
