@@ -62,7 +62,7 @@ router.post(
 				);
 			}
 
-			Host.create({ip})
+			return Host.create({ip})
 				.then(newHost => {
 					return res.redirect('/hosts');
 				})

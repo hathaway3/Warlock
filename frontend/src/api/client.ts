@@ -295,6 +295,23 @@ class ApiClient {
     return res.data || res.hosts || [];
   }
 
+  async getHostSshKey(): Promise<{ success: boolean; sshKey?: string; setupCommand?: string; error?: string }> {
+    return this.request<{ success: boolean; sshKey?: string; setupCommand?: string; error?: string }>('/api/hosts/ssh-key');
+  }
+
+  async addHost(ip: string): Promise<{ success: boolean; message?: string; host?: any; error?: string; sshKey?: string; setupCommand?: string }> {
+    return this.request<{ success: boolean; message?: string; host?: any; error?: string; sshKey?: string; setupCommand?: string }>('/api/hosts', {
+      method: 'POST',
+      body: JSON.stringify({ ip }),
+    });
+  }
+
+  async deleteHost(host: string): Promise<ApiResponse> {
+    return this.request<ApiResponse>(`/api/hosts/${encodeURIComponent(host)}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Tokens (Issue #28)
   async getTokens(): Promise<ApiToken[]> {
     const res = await this.request<{ success: boolean; data: ApiToken[] }>('/api/users/tokens');

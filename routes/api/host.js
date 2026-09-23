@@ -7,6 +7,8 @@ const path = require('path');
 const { cmdRunner } = require("../../libs/cmd_runner.mjs");
 const {filePushRunner} = require("../../libs/file_push_runner.mjs");
 const {clearTaggedCache} = require("../../libs/cache.mjs");
+const { Host } = require("../../db.js");
+const { logger } = require("../../libs/logger.mjs");
 
 const router = express.Router();
 
@@ -157,6 +159,34 @@ router.post(
 			}).catch(e => {
 				return res.json({ success: false, error: tryJSONParse(e.stderr) });
 			});
+		}
+	}
+);
+
+/**
+ * API endpoint to delete a host
+ *
+ * API endpoint: DELETE /api/host/:host
+ */
+router.delete(
+	'/:host',
+	validate_session,
+	async (req, res) => {
+		const ip = req.params.host;
+		if (!ip) {
+			return res.status(400).json({ success: false, error: 'Host IP is required.' });
+		}
+
+		try {
+			const deletedCount = await Host.destroy({ where: { ip } });
+			if (!deletedCount) {
+				return res.status(404).json({ success: false, error: 'Host not found or already deleted.' });
+			}
+			clearTaggedCache(ip);
+			return res.json({ success: true, message: 'Host deleted successfully.' });
+		} catch (err) {
+			logger.error(`Error deleting host ${ip}: ${err.message}`, { error: err.stack });
+			return res.status(500).json({ success: false, error: 'Failed to delete host.' });
 		}
 	}
 );
