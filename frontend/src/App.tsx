@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { DashboardView } from './views/DashboardView';
 import { HostsView } from './views/HostsView';
+import { HostDetailsView } from './views/HostDetailsView';
 import { SettingsView } from './views/SettingsView';
 import { ServiceDetailsView } from './views/ServiceDetailsView';
 import { LoginView } from './views/LoginView';
@@ -33,6 +34,7 @@ export function App() {
   const [needsInstall, setNeedsInstall] = useState(false);
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'hosts' | 'settings'>('dashboard');
   const [selectedService, setSelectedService] = useState<SelectedService | null>(null);
+  const [selectedHost, setSelectedHost] = useState<string | null>(null);
 
   // Check auth state on boot
   useEffect(() => {
@@ -62,6 +64,7 @@ export function App() {
     const handleUnauthorized = () => {
       setCurrentUser(null);
       setSelectedService(null);
+      setSelectedHost(null);
     };
 
     window.addEventListener('warlock:unauthorized', handleUnauthorized);
@@ -72,10 +75,17 @@ export function App() {
     await api.logout();
     setCurrentUser(null);
     setSelectedService(null);
+    setSelectedHost(null);
   };
 
   const handleSelectService = (guid: string, host: string, service: string) => {
     setSelectedService({ guid, host, service });
+    setSelectedHost(null);
+  };
+
+  const handleSelectHost = (hostIp: string) => {
+    setSelectedHost(hostIp);
+    setSelectedService(null);
   };
 
   const handleBackToDashboard = () => {
@@ -132,6 +142,7 @@ export function App() {
         onTabChange={(tab) => {
           setCurrentTab(tab);
           setSelectedService(null);
+          setSelectedHost(null);
         }}
         currentUser={currentUser}
         onLogout={handleLogout}
@@ -143,12 +154,17 @@ export function App() {
             service={selectedService.service}
             onBack={handleBackToDashboard}
           />
+        ) : selectedHost && currentTab === 'hosts' ? (
+          <HostDetailsView
+            host={selectedHost}
+            onBack={() => setSelectedHost(null)}
+          />
         ) : (
           <>
             {currentTab === 'dashboard' && (
               <DashboardView onSelectService={handleSelectService} />
             )}
-            {currentTab === 'hosts' && <HostsView />}
+            {currentTab === 'hosts' && <HostsView onSelectHost={handleSelectHost} />}
             {currentTab === 'settings' && <SettingsView />}
           </>
         )}

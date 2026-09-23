@@ -373,6 +373,109 @@ class ApiClient {
       body: JSON.stringify({ authcode }),
     });
   }
+
+  // Application Install / Uninstall / Updates
+  async installApplication(guid: string, host: string, options: string[] = []): Promise<Response> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return fetch(`/api/application/${encodeURIComponent(guid)}/${encodeURIComponent(host)}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ options }),
+    });
+  }
+
+  async uninstallApplication(guid: string, host: string): Promise<Response> {
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return fetch(`/api/application/${encodeURIComponent(guid)}/${encodeURIComponent(host)}`, {
+      method: 'DELETE',
+      headers,
+    });
+  }
+
+  async checkAppUpdate(guid: string, host: string, service?: string): Promise<{ success: boolean; updates: boolean; message: string }> {
+    const endpoint = service
+      ? `/api/application/update/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      : `/api/application/update/${encodeURIComponent(guid)}/${encodeURIComponent(host)}`;
+    return this.request(endpoint);
+  }
+
+  async updateApplication(guid: string, host: string, service?: string): Promise<Response> {
+    const endpoint = service
+      ? `/api/application/update/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      : `/api/application/update/${encodeURIComponent(guid)}/${encodeURIComponent(host)}`;
+    const headers: Record<string, string> = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return fetch(endpoint, {
+      method: 'POST',
+      headers,
+    });
+  }
+
+  // Firewall
+  async getFirewall(host: string): Promise<{ success: boolean; status: string; rules: any[]; error?: string }> {
+    return this.request(`/api/firewall/${encodeURIComponent(host)}`);
+  }
+
+  async addFirewallRule(host: string, rule: { to: string; from?: string; proto?: string; action: string; comment?: string }): Promise<ApiResponse> {
+    return this.request(`/api/firewall/${encodeURIComponent(host)}`, {
+      method: 'POST',
+      body: JSON.stringify(rule),
+    });
+  }
+
+  async deleteFirewallRule(host: string, rule: { to: string; from?: string; proto?: string; action: string; comment?: string }): Promise<ApiResponse> {
+    return this.request(`/api/firewall/${encodeURIComponent(host)}`, {
+      method: 'DELETE',
+      body: JSON.stringify(rule),
+    });
+  }
+
+  async setFirewallStatus(host: string, action: 'enable' | 'disable'): Promise<ApiResponse> {
+    return this.request(`/api/firewall/${encodeURIComponent(host)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ action }),
+    });
+  }
+
+  async installFirewall(host: string): Promise<ApiResponse> {
+    return this.request(`/api/firewall/install/${encodeURIComponent(host)}`, {
+      method: 'POST',
+    });
+  }
+
+  // Cron
+  async getCronJobs(host: string): Promise<{ success: boolean; jobs: any[]; error?: string }> {
+    return this.request(`/api/cron/${encodeURIComponent(host)}`);
+  }
+
+  async addCronJob(host: string, job: { schedule: string; command: string; identifier?: string }): Promise<ApiResponse> {
+    return this.request(`/api/cron/${encodeURIComponent(host)}`, {
+      method: 'POST',
+      body: JSON.stringify(job),
+    });
+  }
+
+  async deleteCronJob(host: string, identifier: string): Promise<ApiResponse> {
+    return this.request(`/api/cron/${encodeURIComponent(host)}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ identifier }),
+    });
+  }
+
+  // Host Metrics
+  async getHostMetrics(host: string, timeframe = 'day'): Promise<{ success: boolean; data: any[]; error?: string }> {
+    return this.request(`/api/metrics/${encodeURIComponent(host)}?timeframe=${encodeURIComponent(timeframe)}`);
+  }
 }
 
 export const api = new ApiClient();

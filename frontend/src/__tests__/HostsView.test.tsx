@@ -136,4 +136,24 @@ describe('HostsView Component', () => {
       expect(deleteHostSpy).toHaveBeenCalledWith('192.168.1.50');
     });
   });
+
+  it('triggers onSelectHost when clicking Manage Host button', async () => {
+    vi.spyOn(api, 'getHosts').mockResolvedValue([
+      { id: 1, ip: '10.10.10.10', os: 'Ubuntu 24.04' },
+    ]);
+    const onSelectHost = vi.fn();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <HostsView onSelectHost={onSelectHost} />
+      </QueryClientProvider>
+    );
+
+    expect(await screen.findByText('10.10.10.10')).toBeDefined();
+
+    const manageBtn = screen.getByRole('button', { name: /Manage Host/i });
+    fireEvent.click(manageBtn);
+
+    expect(onSelectHost).toHaveBeenCalledWith('10.10.10.10');
+  });
 });

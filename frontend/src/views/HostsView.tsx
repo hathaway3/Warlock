@@ -16,7 +16,11 @@ import {
   Trash2,
 } from 'lucide-react';
 
-export const HostsView: React.FC = () => {
+interface HostsViewProps {
+  onSelectHost?: (hostIp: string) => void;
+}
+
+export const HostsView: React.FC<HostsViewProps> = ({ onSelectHost }) => {
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [ipInput, setIpInput] = useState('');
@@ -146,8 +150,11 @@ export const HostsView: React.FC = () => {
                   <div className="w-10 h-10 rounded-lg bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                     <Server size={20} />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-white text-base font-mono">{host.ip}</h3>
+                  <div
+                    className={onSelectHost ? 'cursor-pointer group' : ''}
+                    onClick={() => onSelectHost && onSelectHost(host.ip)}
+                  >
+                    <h3 className="font-bold text-white text-base font-mono group-hover:text-cyan-400 transition-colors">{host.ip}</h3>
                     <span className="text-xs text-slate-400">{host.os || 'Linux'}</span>
                   </div>
                 </div>
@@ -182,6 +189,18 @@ export const HostsView: React.FC = () => {
                   <div className="font-semibold text-emerald-400 mt-0.5">Configured</div>
                 </div>
               </div>
+
+              {onSelectHost && (
+                <div className="pt-3 mt-3 border-t border-indigo-950/40 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => onSelectHost(host.ip)}
+                    className="px-3 py-1 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 text-xs font-medium transition-colors cursor-pointer"
+                  >
+                    Manage Host
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>

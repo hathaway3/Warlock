@@ -141,7 +141,7 @@ Debian does not ship with `sudo` by default, so use `su` instead:
 
 ```bash
 # Using wget:
-su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | su - -c "bash" root
 
 # Or using curl:
 curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | su - -c "bash" root
@@ -156,7 +156,7 @@ Ubuntu ships with `sudo` by default:
 curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash
 
 # Or using wget:
-sudo su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash
 ```
 
 #### Non-Interactive & Automation Flags

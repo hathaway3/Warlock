@@ -9,7 +9,7 @@
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | bash
 #   or:
-#   su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+#   wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | su - -c "bash" root
 #
 # Options:
 #   --repo <url>      Override git repository URL (default: https://github.com/hathaway3/Warlock.git)
@@ -34,10 +34,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Detect interactive vs piped execution
-if [ ! -t 0 ] && [ -c /dev/tty ]; then
-	exec < /dev/tty
-fi
 
 # Ensure debconf and needrestart do not prompt interactively on Debian 11/12/13
 export DEBIAN_FRONTEND=noninteractive

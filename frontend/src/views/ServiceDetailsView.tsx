@@ -24,6 +24,9 @@ import {
   AlertTriangle,
   Server,
   Plus,
+  Settings as SettingsIcon,
+  Trash2,
+  Power,
 } from 'lucide-react';
 
 interface ServiceDetailsViewProps {
@@ -33,7 +36,7 @@ interface ServiceDetailsViewProps {
   onBack: () => void;
 }
 
-type TabType = 'overview' | 'terminal' | 'configs' | 'files' | 'backups' | 'mods';
+type TabType = 'overview' | 'terminal' | 'configs' | 'files' | 'backups' | 'mods' | 'settings';
 
 export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
   guid,
@@ -47,6 +50,17 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Settings & Lifecycle state
+  const [removeModId, setRemoveModId] = useState('');
+  const [updateStatus, setUpdateStatus] = useState<{ checked: boolean; updates?: boolean; message?: string } | null>(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [updateStreaming, setUpdateStreaming] = useState(false);
+  const [updateLogs, setUpdateLogs] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showUninstallModal, setShowUninstallModal] = useState(false);
+  const [uninstallStreaming, setUninstallStreaming] = useState(false);
+  const [uninstallLogs, setUninstallLogs] = useState('');
 
   // Configs tab state
   const [configs, setConfigs] = useState<ServiceConfigItem[]>([]);
@@ -262,6 +276,137 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
     }
   };
 
+  // Remove Mod
+  const handleRemoveMod = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!removeModId.trim()) return;
+    setActionLoading(true);
+    try {
+      const res = await api.removeServiceMod(guid, host, service, removeModId.trim());
+      if (res.success) {
+        showToast(`Mod ${removeModId.trim()} removed!`);
+        setRemoveModId('');
+        loadMods();
+      } else {
+        showToast(res.error || 'Failed to remove mod', 'error');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'Error removing mod', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Toggle start on boot
+  const handleToggleBoot = async () => {
+    if (!serviceData) return;
+    const action = serviceData.enabled ? 'disable' : 'enable';
+    setActionLoading(true);
+    try {
+      const res = await api.controlService(guid, host, service, action);
+      if (res.success) {
+        setServiceData({ ...serviceData, enabled: !serviceData.enabled });
+        showToast(`Start on boot ${!serviceData.enabled ? 'enabled' : 'disabled'}!`);
+      } else {
+        showToast(res.error || 'Failed to update boot setting', 'error');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error updating boot setting', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Check for updates
+  const handleCheckUpdate = async () => {
+    setUpdateLoading(true);
+    try {
+      const res = await api.checkAppUpdate(guid, host, service);
+      setUpdateStatus({ checked: true, updates: res.updates, message: res.message });
+      showToast(res.updates ? 'Updates are available!' : 'Game is up to date.');
+    } catch (e: any) {
+      showToast(e.message || 'Error checking for updates', 'error');
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  // Run update
+  const handleRunUpdate = async () => {
+    setUpdateStreaming(true);
+    setUpdateLogs(`Initiating game update on ${host}...\n`);
+    try {
+      const response = await api.updateApplication(guid, host, service);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          setUpdateLogs((prev) => prev + chunk);
+        }
+      }
+      setUpdateLogs((prev) => prev + '\n✓ Update complete!\n');
+      showToast('Game updated successfully!');
+      fetchServiceDetails();
+    } catch (e: any) {
+      setUpdateLogs((prev) => prev + `\n✖ Error during update: ${e.message || String(e)}\n`);
+      showToast('Update failed', 'error');
+    } finally {
+      setUpdateStreaming(false);
+    }
+  };
+
+  // Delete instance
+  const handleDeleteInstance = async () => {
+    setActionLoading(true);
+    try {
+      const res = await api.deleteService(guid, host, service);
+      if (res.success) {
+        showToast(`Service instance ${service} removed!`);
+        setShowDeleteModal(false);
+        onBack();
+      } else {
+        showToast(res.error || 'Failed to remove instance', 'error');
+      }
+    } catch (e: any) {
+      showToast(e.message || 'Error removing instance', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Uninstall application
+  const handleUninstallApp = async () => {
+    setUninstallStreaming(true);
+    setUninstallLogs(`Uninstalling game application from host ${host}...\n`);
+    try {
+      const response = await api.uninstallApplication(guid, host);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          setUninstallLogs((prev) => prev + chunk);
+        }
+      }
+      setUninstallLogs((prev) => prev + '\n✓ Uninstallation complete!\n');
+      showToast('Application uninstalled!');
+      setTimeout(() => {
+        setShowUninstallModal(false);
+        onBack();
+      }, 1500);
+    } catch (e: any) {
+      setUninstallLogs((prev) => prev + `\n✖ Error during uninstall: ${e.message || String(e)}\n`);
+      showToast('Uninstall failed', 'error');
+    } finally {
+      setUninstallStreaming(false);
+    }
+  };
+
   const isRunning = serviceData?.status === 'running';
 
   return (
@@ -380,6 +525,21 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
               <span>Start Service</span>
             </button>
           )}
+
+          <button
+            type="button"
+            onClick={handleToggleBoot}
+            disabled={actionLoading}
+            title={serviceData?.enabled ? "Disable automatic start on boot" : "Enable automatic start on boot"}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+              serviceData?.enabled
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10'
+            }`}
+          >
+            <Power className="w-3.5 h-3.5" />
+            <span>{serviceData?.enabled ? 'Boot: Auto' : 'Boot: Manual'}</span>
+          </button>
 
           <button
             type="button"
@@ -523,6 +683,19 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
         >
           <Plus className="w-4 h-4" />
           <span>Mods</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('settings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'settings'
+              ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+          }`}
+        >
+          <SettingsIcon className="w-4 h-4" />
+          <span>Settings & Lifecycle</span>
         </button>
       </div>
 
@@ -764,24 +937,46 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
       {/* 6. Mods */}
       {activeTab === 'mods' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10">
-            <h3 className="text-sm font-semibold text-white mb-2">Install New Mod</h3>
-            <form onSubmit={handleInstallMod} className="flex gap-2 max-w-md">
-              <input
-                type="text"
-                placeholder="Steam Workshop ID (e.g. 123456789)"
-                value={newModId}
-                onChange={(e) => setNewModId(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
-              />
-              <button
-                type="submit"
-                disabled={!newModId.trim() || actionLoading}
-                className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs disabled:opacity-40 transition-colors cursor-pointer"
-              >
-                Install
-              </button>
-            </form>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+              <h3 className="text-sm font-semibold text-white mb-2">Install New Mod</h3>
+              <form onSubmit={handleInstallMod} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Steam Workshop ID (e.g. 123456789)"
+                  value={newModId}
+                  onChange={(e) => setNewModId(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                />
+                <button
+                  type="submit"
+                  disabled={!newModId.trim() || actionLoading}
+                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  Install
+                </button>
+              </form>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10">
+              <h3 className="text-sm font-semibold text-white mb-2">Uninstall / Remove Mod</h3>
+              <form onSubmit={handleRemoveMod} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Mod Identifier to remove"
+                  value={removeModId}
+                  onChange={(e) => setRemoveModId(e.target.value)}
+                  className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-rose-500"
+                />
+                <button
+                  type="submit"
+                  disabled={!removeModId.trim() || actionLoading}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  Remove
+                </button>
+              </form>
+            </div>
           </div>
 
           <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
@@ -796,6 +991,204 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
               <pre className="p-4 rounded-xl bg-black border border-white/5 font-mono text-xs text-slate-300 whitespace-pre-wrap">
                 {modsOutput}
               </pre>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 7. Settings & Lifecycle */}
+      {activeTab === 'settings' && (
+        <div className="space-y-6">
+          {/* Automated Boot Configuration */}
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                  <Power className="w-4 h-4 text-emerald-400" /> Start on Host Reboot
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Configure whether this game service automatically starts when the host server reboots.
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleToggleBoot}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border flex items-center gap-1.5 ${
+                  serviceData?.enabled
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                    : 'bg-slate-800 text-slate-300 border-white/10 hover:bg-slate-700'
+                }`}
+              >
+                <Power className="w-3.5 h-3.5" />
+                <span>{serviceData?.enabled ? 'Auto-Start: Enabled' : 'Auto-Start: Disabled'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Application Updates */}
+          <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-cyan-400" /> Game Updates & Maintenance
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Check if newer builds or updates are available from the game maintainer and stream the remote update.
+              </p>
+            </div>
+
+            {updateStatus && (
+              <div className={`p-3 rounded-xl text-xs font-mono border ${updateStatus.updates ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' : 'bg-black/30 border-white/10 text-slate-300'}`}>
+                <span>{updateStatus.message}</span>
+              </div>
+            )}
+
+            {updateStreaming && (
+              <div className="p-4 rounded-xl bg-black border border-cyan-500/30 font-mono text-xs text-cyan-300 whitespace-pre-wrap max-h-56 overflow-auto">
+                {updateLogs}
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                disabled={updateLoading || updateStreaming}
+                onClick={handleCheckUpdate}
+                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-40"
+              >
+                {updateLoading ? 'Checking...' : 'Check for Updates'}
+              </button>
+              <button
+                type="button"
+                disabled={updateStreaming}
+                onClick={handleRunUpdate}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-semibold shadow-lg transition-all cursor-pointer disabled:opacity-40"
+              >
+                Update Game Now
+              </button>
+            </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="p-5 rounded-2xl bg-rose-950/10 border border-rose-500/20 space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold text-rose-400 flex items-center gap-2">
+                <Trash2 className="w-4 h-4" /> Danger Zone
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Irreversible actions for this service instance and game installation.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-black/40 border border-rose-500/20">
+              <div>
+                <div className="text-xs font-semibold text-white">Remove Instance</div>
+                <div className="text-[11px] text-slate-400">
+                  Delete this specific instance "{service}". Other server instances on this host will remain intact.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+              >
+                Remove Instance
+              </button>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-black/40 border border-rose-500/20">
+              <div>
+                <div className="text-xs font-semibold text-white">Uninstall Game Application</div>
+                <div className="text-[11px] text-slate-400">
+                  Completely uninstall the game server application from host {host}.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowUninstallModal(true)}
+                className="px-4 py-2 rounded-xl bg-rose-900/40 hover:bg-rose-900/60 text-rose-300 border border-rose-700/50 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+              >
+                Uninstall Application
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Instance Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-base font-bold text-white">Confirm Removal</h3>
+            </div>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Are you sure you want to remove instance <strong className="font-mono text-white">{service}</strong>? This will delete the service instance definition while keeping other instances intact.
+            </p>
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleDeleteInstance}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors cursor-pointer disabled:opacity-40"
+              >
+                Confirm Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Uninstall Application Modal */}
+      {showUninstallModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-rose-400">
+              <AlertTriangle className="w-6 h-6" />
+              <h3 className="text-base font-bold text-white">Uninstall Application</h3>
+            </div>
+
+            {!uninstallStreaming ? (
+              <>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  This will completely uninstall the game application from host <strong className="font-mono text-white">{host}</strong>. All associated services and game server files will be purged.
+                </p>
+                <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setShowUninstallModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUninstallApp}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    Proceed with Uninstall
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-xs text-rose-300 font-medium">
+                  <RefreshCw size={14} className="animate-spin text-rose-400" />
+                  <span>Uninstalling application...</span>
+                </div>
+                <pre className="p-3.5 rounded-xl bg-black border border-rose-950 font-mono text-xs text-slate-300 whitespace-pre-wrap max-h-56 overflow-auto">
+                  {uninstallLogs}
+                </pre>
+              </div>
             )}
           </div>
         </div>
