@@ -8,11 +8,14 @@ Warlock is a "bring-your-own-server" game manager that supports managing your fl
 
 ## Features
 
-- Simple game installer
-- Game configuration management
-- Firewall and port management
-- Backup and restore functionality
-- User-friendly web interface
+- **Modern Single-Page Dashboard**: Fast, responsive React 19 + TypeScript + Tailwind CSS v4 UI with mobile bottom navigation and desktop sidebar.
+- **GPU-Accelerated Web Terminal**: Integrated Xterm.js terminal with live Server-Sent Events (SSE) log streaming and command console.
+- **In-Browser Code & Config Editor**: CodeMirror 6 with syntax highlighting, search/replace, line wrapping, and keyboard shortcuts (`Ctrl+S`).
+- **Remote File Manager**: Chunked file uploads, archive extraction (zip, tar, tgz, etc.), download, rename, and directory breadcrumb navigation.
+- **Bearer Token & REST/SSE API**: Automated fleet management via persistent API tokens (`/api/users/tokens`) and standard W3C SSE event streams.
+- **Two-Factor Authentication**: Built-in TOTP 2FA with instant QR code scanning and initial fleet setup wizard.
+- **Firewall & Port Orchestration**: Automatic UFW/firewalld port provisioning with anti-lockout rules.
+- **Backups & Scheduled Tasks**: Automated or manual snapshot creation and one-click restoration.
 
 ![Warlock Dashboard](docs/media/warlock-dashboard.webp)
 
@@ -85,23 +88,29 @@ for each game instance.
 
 ### Development Build
 
-To get a development build of Warlock up and running, do the following:
+To get a development build of Warlock up and running:
 
 ```bash
-git clone https://github.com/BitsNBytes25/Warlock.git
+git clone https://github.com/hathaway3/Warlock.git
 cd Warlock
 npm install
+npm run build
 ```
 
-Then you can start the development server with:
+Then you can start the development server:
 
 ```bash
 npm run dev
 ```
 
+For live frontend development with Vite Hot-Module-Replacement (HMR):
+```bash
+npm --prefix frontend run dev
+```
+
 During rapid development, the following will be useful.
 This will skip database migration checks to allow faster restarting
-of the development server.
+of the development server:
 
 ```bash
 npm run dev:quick
@@ -114,35 +123,33 @@ and which commands are cached:
 npm run dev:profile
 ```
 
-### Production Install
-
-The recommended method for installing on production servers
-is to use the provided bootstrap script.
-
-This script will install git, checkout the application in `/var/www/warlock`,
-and run the install script to complete the process.
-
-The default installation will use nginx as a proxy,
-install a service into systemd to manage Warlock,
-and install the appropriate version of Node.js to run the application.
-
-Before installing on a production server,
-it is recommended to have a domain name (or subdomain)
-pointed to the server's IP address via an `A` or `CNAME` record.
-This will enable an SSL certificate to be auto-generated with certbot for Warlock.
-
-#### Debian
-
-Debian does not ship with `sudo` by default, so use `su` instead.
-This requires the **root** password to be entered if ran as a non-root user.
-
+To run the automated test suite (backend unit tests + frontend Vitest):
 ```bash
-su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+npm test
 ```
 
-#### Ubuntu
+### Production Install
 
-Ubuntu and other derivatives ship with `sudo` by default:
+The recommended method for installing on production servers is using the provided bootstrap script.
+The installer automatically handles OS detection, package manager lock resolution, Node.js v24 setup, Nginx reverse proxy configuration, systemd service installation, and firewall anti-lockout rules.
+
+Before installing on a production server, it is recommended to have a domain name (or subdomain) pointed to the server's IP address via an `A` or `CNAME` record. This will enable an SSL certificate to be auto-generated with certbot for Warlock.
+
+#### Debian (11 Bullseye, 12 Bookworm, 13 Trixie)
+
+Debian does not ship with `sudo` by default, so use `su` instead:
+
+```bash
+# Using wget:
+su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+
+# Or using curl:
+curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | su - -c "bash" root
+```
+
+#### Ubuntu (20.04 Focal, 22.04 Jammy, 24.04 Noble LTS)
+
+Ubuntu ships with `sudo` by default:
 
 ```bash
 # Using curl:
@@ -152,18 +159,32 @@ curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh 
 sudo su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
 ```
 
+#### Non-Interactive & Automation Flags
+
+The bootstrap and installer scripts support headless/automated environments (e.g. Cloud-Init, Ansible, Docker):
+
+```bash
+# Accept terms and run completely non-interactively:
+curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash -s -- --yes
+
+# Specify a custom domain non-interactively:
+curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash -s -- --yes --fqdn panel.example.com
+
+# Skip Nginx or systemd if running behind an external reverse proxy:
+curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash -s -- --yes --skip-nginx
+```
 
 ### Production Build (Manual Process)
 
-To install Warlock on a server, do the following as root:
+To install Warlock on a server manually as root:
 
 ```bash
 # Debian/Ubuntu
-apt install git
+apt update && apt install -y git
 # Fedora/RHEL
-dnf install git
+dnf install -y git
 # Arch Linux
-pacman -S git
+pacman -S --noconfirm git
 
 mkdir -p /var/www
 chmod a+rx /var/www
@@ -173,13 +194,7 @@ cd Warlock
 ./install-warlock.sh
 ```
 
-This will install Node and all required dependencies and set up Warlock to run as a service.
-
-By default it will install nginx as a frontend, taking over the default web server.
-
-You can skip the nginx integration by passing `--skip-nginx` to the install script.
-
-You can also skip systemd integration by passing `--skip-systemd`.
+This will install Node and all required dependencies, configure Nginx, and set up Warlock to run as a systemd service.
 
 ### Docker Build
 
@@ -195,19 +210,15 @@ docker run \
   bitsnbytes25/warlock:latest
 ```
 
-
 ## Supported Platforms
 
-Warlock supports any Linux distribution, but at the moment most games expect
-Ubuntu or Debian.
+Warlock is engineered to run seamlessly across modern Linux distributions:
+- **Debian**: Debian 11 (Bullseye), Debian 12 (Bookworm), Debian 13 (Trixie)
+- **Ubuntu**: Ubuntu 20.04 LTS (Focal), Ubuntu 22.04 LTS (Jammy), Ubuntu 24.04 LTS (Noble)
+- **RHEL / Rocky / AlmaLinux / Fedora**: Enterprise Linux 8/9 & modern Fedora
+- **Arch Linux**: Modern rolling releases
 
-Since Warlock does not _need_ to be on the same server as your game hosts,
-you are free to run Warlock on an Arch server (for example)
-and have Debian / Ubuntu game hosts in the cluster.
-
-You can run Warlock on your laptop or other local device, providing
-your device has SSH access to the server you wish to manage.
-This is an excellent option as it keeps the management interface local.
+*Note: Warlock requires Node.js v24 or higher, which is automatically installed by the installer (with direct binary fallbacks if repository packages are unavailable).*
 
 ## First Run
 
