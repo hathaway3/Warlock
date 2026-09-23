@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layout/AppShell';
 import { DashboardView } from './views/DashboardView';
@@ -9,6 +9,14 @@ import { ServiceDetailsView } from './views/ServiceDetailsView';
 import { LoginView } from './views/LoginView';
 import { TwoFactorSetupView } from './views/TwoFactorSetupView';
 import { api } from './api/client';
+import {
+  parseHash,
+  formatHash,
+  type RouteState,
+  type MainTab,
+  type ServiceSubTab,
+  type HostSubTab,
+} from './router/hashRouter';
 import type { AuthUser } from './types';
 import { Loader2 } from 'lucide-react';
 
@@ -21,20 +29,36 @@ const queryClient = new QueryClient({
   },
 });
 
-interface SelectedService {
-  guid: string;
-  host: string;
-  service: string;
-}
-
 export function App() {
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [needs2faSetup, setNeeds2faSetup] = useState(false);
   const [needsInstall, setNeedsInstall] = useState(false);
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'hosts' | 'settings'>('dashboard');
-  const [selectedService, setSelectedService] = useState<SelectedService | null>(null);
-  const [selectedHost, setSelectedHost] = useState<string | null>(null);
+  const [routeState, setRouteState] = useState<RouteState>(() => parseHash(window.location.hash));
+
+  const navigateTo = useCallback((nextRoute: RouteState) => {
+    setRouteState(nextRoute);
+    const targetHash = formatHash(nextRoute);
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
+    }
+  }, []);
+
+  // Listen to browser forward/back hash changes
+  useEffect(() => {
+    const handleHashChange = () => {
+      const parsed = parseHash(window.location.hash);
+      setRouteState(parsed);
+    };
+
+    // Initialize canonical hash if empty
+    if (!window.location.hash || window.location.hash === '#') {
+      window.location.hash = formatHash(routeState);
+    }
+
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   // Check auth state on boot
   useEffect(() => {
@@ -51,7 +75,7 @@ export function App() {
           setCurrentUser(null);
           setNeedsInstall(false);
         }
-      } catch (e) {
+      } catch {
         setCurrentUser(null);
       } finally {
         setAuthChecked(true);
@@ -63,34 +87,75 @@ export function App() {
     // Handle global 401 events
     const handleUnauthorized = () => {
       setCurrentUser(null);
-      setSelectedService(null);
-      setSelectedHost(null);
+      navigateTo({ tab: 'dashboard' });
     };
 
     window.addEventListener('warlock:unauthorized', handleUnauthorized);
     return () => window.removeEventListener('warlock:unauthorized', handleUnauthorized);
-  }, []);
+  }, [navigateTo]);
 
   const handleLogout = async () => {
     await api.logout();
     setCurrentUser(null);
-    setSelectedService(null);
-    setSelectedHost(null);
+    navigateTo({ tab: 'dashboard' });
+  };
+
+  const handleTabChange = (tab: MainTab) => {
+    navigateTo({ tab });
   };
 
   const handleSelectService = (guid: string, host: string, service: string) => {
-    setSelectedService({ guid, host, service });
-    setSelectedHost(null);
+    navigateTo({
+      tab: 'dashboard',
+      service: { guid, host, service, subTab: 'overview' },
+    });
   };
 
-  const handleSelectHost = (hostIp: string) => {
-    setSelectedHost(hostIp);
-    setSelectedService(null);
+  const handleServiceTabChange = (subTab: ServiceSubTab) => {
+    if (!routeState.service) return;
+    navigateTo({
+      tab: 'dashboard',
+      service: { ...routeState.service, subTab },
+    });
   };
 
   const handleBackToDashboard = () => {
-    setSelectedService(null);
-    setCurrentTab('dashboard');
+    navigateTo({ tab: 'dashboard' });
+  };
+
+  const handleSelectHost = (hostIp: string) => {
+    navigateTo({
+      tab: 'hosts',
+      host: { host: hostIp, subTab: 'overview' },
+    });
+  };
+
+  const handleHostTabChange = (subTab: HostSubTab) => {
+    if (!routeState.host) return;
+    navigateTo({
+      tab: 'hosts',
+      host: { ...routeState.host, subTab },
+    });
+  };
+
+  const handleBackToHosts = () => {
+    navigateTo({ tab: 'hosts' });
+  };
+
+  const handleOpenInstallModal = () => {
+    navigateTo({ tab: 'dashboard', isInstallModalOpen: true });
+  };
+
+  const handleCloseInstallModal = () => {
+    navigateTo({ tab: 'dashboard' });
+  };
+
+  const handleOpenAddHostModal = () => {
+    navigateTo({ tab: 'hosts', isAddHostModalOpen: true });
+  };
+
+  const handleCloseAddHostModal = () => {
+    navigateTo({ tab: 'hosts' });
   };
 
   // If still verifying auth state, show loading spinner
@@ -138,34 +203,46 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AppShell
-        currentTab={currentTab}
-        onTabChange={(tab) => {
-          setCurrentTab(tab);
-          setSelectedService(null);
-          setSelectedHost(null);
-        }}
+        currentTab={routeState.tab}
+        onTabChange={handleTabChange}
         currentUser={currentUser}
         onLogout={handleLogout}
       >
-        {selectedService ? (
+        {routeState.service && routeState.tab === 'dashboard' ? (
           <ServiceDetailsView
-            guid={selectedService.guid}
-            host={selectedService.host}
-            service={selectedService.service}
+            guid={routeState.service.guid}
+            host={routeState.service.host}
+            service={routeState.service.service}
+            initialTab={routeState.service.subTab}
+            onTabChange={handleServiceTabChange}
             onBack={handleBackToDashboard}
           />
-        ) : selectedHost && currentTab === 'hosts' ? (
+        ) : routeState.host && routeState.tab === 'hosts' ? (
           <HostDetailsView
-            host={selectedHost}
-            onBack={() => setSelectedHost(null)}
+            host={routeState.host.host}
+            initialTab={routeState.host.subTab}
+            onTabChange={handleHostTabChange}
+            onBack={handleBackToHosts}
           />
         ) : (
           <>
-            {currentTab === 'dashboard' && (
-              <DashboardView onSelectService={handleSelectService} />
+            {routeState.tab === 'dashboard' && (
+              <DashboardView
+                onSelectService={handleSelectService}
+                isInstallModalOpen={routeState.isInstallModalOpen}
+                onOpenInstallModal={handleOpenInstallModal}
+                onCloseInstallModal={handleCloseInstallModal}
+              />
             )}
-            {currentTab === 'hosts' && <HostsView onSelectHost={handleSelectHost} />}
-            {currentTab === 'settings' && <SettingsView />}
+            {routeState.tab === 'hosts' && (
+              <HostsView
+                onSelectHost={handleSelectHost}
+                isAddModalOpen={routeState.isAddHostModalOpen}
+                onOpenAddModal={handleOpenAddHostModal}
+                onCloseAddModal={handleCloseAddHostModal}
+              />
+            )}
+            {routeState.tab === 'settings' && <SettingsView />}
           </>
         )}
       </AppShell>

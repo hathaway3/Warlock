@@ -21,7 +21,8 @@ export async function getAllApplications() {
 
 		if (cachedApplications) {
 			logger.debug('getAllApplications: Fetched cached application list');
-			applications = cachedApplications;
+			// Deep clone to ensure fresh installs array per invocation and avoid mutating cached objects
+			applications = JSON.parse(JSON.stringify(cachedApplications));
 		}
 		else {
 			const appsFilePath = path.join(path.dirname(path.dirname(fileURLToPath(import.meta.url))), 'Apps.yaml');
@@ -36,7 +37,7 @@ export async function getAllApplications() {
 					applications[ item.guid ] = item;
 					applications[ item.guid ].installs = [];
 				});
-				cache.set('all_applications', applications, 3600);
+				cache.set('all_applications', JSON.parse(JSON.stringify(applications)), 3600);
 			}
 		}
 
@@ -45,7 +46,7 @@ export async function getAllApplications() {
 		Host.findAll().then(async hosts => {
 			if (hosts.length === 0) {
 				logger.debug('getAllApplications: No hosts found in database.');
-				return reject(new Error('No hosts found in database.'));
+				return resolve(Object.values(applications));
 			}
 
 			let promises = [];
@@ -76,6 +77,6 @@ export async function getAllApplications() {
 
 			logger.debug(`getAllApplications: Application Definitions Loaded with ${appCount} apps and ${installCount} installs.`);
 			return resolve(Object.values(applications));
-		});
+		}).catch(reject);
 	});
 }

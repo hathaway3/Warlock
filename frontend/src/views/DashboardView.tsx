@@ -21,13 +21,30 @@ import {
 
 interface DashboardViewProps {
   onSelectService?: (guid: string, host: string, service: string) => void;
+  isInstallModalOpen?: boolean;
+  onOpenInstallModal?: () => void;
+  onCloseInstallModal?: () => void;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({
+  onSelectService,
+  isInstallModalOpen: controlledInstallOpen,
+  onOpenInstallModal,
+  onCloseInstallModal,
+}) => {
   const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [actionError, setActionError] = useState<string | null>(null);
-  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [internalInstallModalOpen, setInternalInstallModalOpen] = useState(false);
+
+  const isInstallModalOpen = controlledInstallOpen !== undefined
+    ? controlledInstallOpen
+    : internalInstallModalOpen;
+
+  const handleOpenInstall = () => {
+    setInternalInstallModalOpen(true);
+    onOpenInstallModal?.();
+  };
   const [selectedAppGuid, setSelectedAppGuid] = useState('');
   const [selectedHostIp, setSelectedHostIp] = useState('');
   const [installOptions, setInstallOptions] = useState('');
@@ -91,7 +108,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService })
 
   const handleCloseInstallModal = () => {
     if (isInstalling) return;
-    setIsInstallModalOpen(false);
+    setInternalInstallModalOpen(false);
+    onCloseInstallModal?.();
     setSelectedAppGuid('');
     setSelectedHostIp('');
     setInstallOptions('');
@@ -170,7 +188,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService })
 
           <button
             type="button"
-            onClick={() => setIsInstallModalOpen(true)}
+            onClick={handleOpenInstall}
             className="min-h-[38px] px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-medium rounded-lg text-xs flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
           >
             <Plus size={15} />
@@ -249,7 +267,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService })
           </p>
           <button
             type="button"
-            onClick={() => setIsInstallModalOpen(true)}
+            onClick={handleOpenInstall}
             className="mt-4 px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-medium rounded-lg text-xs inline-flex items-center gap-1.5 transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
           >
             <Plus size={15} />
@@ -519,6 +537,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService })
 
             {!isInstalling && !installFinished ? (
               <form onSubmit={handleStartInstall} className="space-y-4 overflow-y-auto pr-1">
+                {hosts.length === 0 && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-xs flex items-start gap-2">
+                    <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-400" />
+                    <span>
+                      No cluster hosts are registered yet. Please add a server host under the <strong>Hosts</strong> tab before installing a game server.
+                    </span>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1.5">Select Game Application</label>
                   <select
@@ -544,7 +571,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onSelectService })
                     required
                     className="w-full px-3.5 py-2.5 bg-[#080a10] border border-indigo-900/40 rounded-xl text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
                   >
-                    <option value="" disabled>-- Select target server host --</option>
+                    <option value="" disabled>
+                      {hosts.length === 0 ? '-- No cluster hosts available (add one under Hosts) --' : '-- Select target server host --'}
+                    </option>
                     {hosts.map((h) => (
                       <option key={h.id || h.ip} value={h.ip}>
                         {h.ip} ({h.os || 'Linux'})

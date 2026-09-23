@@ -41,9 +41,13 @@ export const AppShell: React.FC<AppShellProps> = ({
             const Icon = item.icon;
             const active = currentTab === item.id;
             return (
-              <button
+              <a
                 key={item.id}
-                onClick={() => onTabChange(item.id)}
+                href={`#${item.id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onTabChange(item.id);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
                   active
                     ? 'bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.15)]'
@@ -52,7 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               >
                 <Icon size={18} />
                 <span>{item.label}</span>
-              </button>
+              </a>
             );
           })}
         </nav>
@@ -91,16 +95,20 @@ export const AppShell: React.FC<AppShellProps> = ({
           const Icon = item.icon;
           const active = currentTab === item.id;
           return (
-            <button
+            <a
               key={item.id}
-              onClick={() => onTabChange(item.id)}
+              href={`#${item.id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onTabChange(item.id);
+              }}
               className={`flex flex-col items-center justify-center flex-1 h-full min-h-[48px] py-1 transition-colors cursor-pointer ${
                 active ? 'text-indigo-400 font-semibold' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <Icon size={20} />
               <span className="text-[11px] mt-1 tracking-tight">{item.label}</span>
-            </button>
+            </a>
           );
         })}
       </nav>

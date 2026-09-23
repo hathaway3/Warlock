@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { FileManager } from '../components/files/FileManager';
@@ -23,14 +23,32 @@ import {
 
 interface HostDetailsViewProps {
   host: string;
+  initialTab?: HostTab;
+  onTabChange?: (tab: HostTab) => void;
   onBack: () => void;
 }
 
 type HostTab = 'overview' | 'firewall' | 'cron' | 'files';
 
-export const HostDetailsView: React.FC<HostDetailsViewProps> = ({ host, onBack }) => {
+export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
+  host,
+  initialTab,
+  onTabChange,
+  onBack,
+}) => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<HostTab>('overview');
+  const [activeTab, setActiveTab] = useState<HostTab>(initialTab || 'overview');
+
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const handleSwitchTab = (tab: HostTab) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [timeframe, setTimeframe] = useState('day');
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -223,7 +241,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({ host, onBack }
       <div className="flex items-center gap-1.5 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none">
         <button
           type="button"
-          onClick={() => setActiveTab('overview')}
+          onClick={() => handleSwitchTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'overview'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -236,7 +254,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({ host, onBack }
 
         <button
           type="button"
-          onClick={() => setActiveTab('firewall')}
+          onClick={() => handleSwitchTab('firewall')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'firewall'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -249,7 +267,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({ host, onBack }
 
         <button
           type="button"
-          onClick={() => setActiveTab('cron')}
+          onClick={() => handleSwitchTab('cron')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'cron'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -262,7 +280,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({ host, onBack }
 
         <button
           type="button"
-          onClick={() => setActiveTab('files')}
+          onClick={() => handleSwitchTab('files')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'files'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'

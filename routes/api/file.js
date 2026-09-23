@@ -11,6 +11,8 @@ const {correctMimetype} = require("../../libs/correct_mimetype.mjs");
 const crypto = require('crypto');
 const {clearTaggedCache} = require("../../libs/cache.mjs");
 
+const getErrorMessage = (e) => (e && e.error && e.error.message) || (e && e.message) || String(e);
+
 const router = express.Router();
 
 // File viewing endpoint
@@ -53,7 +55,7 @@ router.get('/:host', validate_session, (req, res) => {
 			}).catch(e => {
 				return res.json({
 					success: false,
-					error: `Cannot download file: ${e.error.message}`
+					error: `Cannot download file: ${getErrorMessage(e)}`
 				});
 			});
 		}
@@ -136,7 +138,7 @@ router.get('/:host', validate_session, (req, res) => {
 			.catch(e => {
 				return res.json({
 					success: false,
-					error: e.error.message
+					error: getErrorMessage(e)
 				});
 			});
 		}
@@ -169,7 +171,7 @@ router.move('/:host', validate_session, (req, res) => {
 		logger.error('Rename error:', e);
 		return res.json({
 			success: false,
-			error: `Cannot rename item: ${e.error.message}`
+			error: `Cannot rename item: ${getErrorMessage(e)}`
 		});
 	});
 });
@@ -248,7 +250,7 @@ router.post('/:host', validate_session, (req, res) => {
 					logger.error('Create directory error:', e);
 					return res.json({
 						success: false,
-						error: `Cannot create directory: ${e.error.message}`
+						error: `Cannot create directory: ${getErrorMessage(e)}`
 					});
 				});
 		}
@@ -273,7 +275,7 @@ router.post('/:host', validate_session, (req, res) => {
 					logger.error('Save file error:', error);
 					return res.json({
 						success: false,
-						error: `Cannot save file: ${error.message}`
+						error: `Cannot save file: ${getErrorMessage(error)}`
 					});
 				})
 				.finally(() => {
@@ -295,7 +297,7 @@ router.post('/:host', validate_session, (req, res) => {
 					logger.error('Create file error:', e);
 					return res.json({
 						success: false,
-						error: `Cannot create file: ${e.error.message}`
+						error: `Cannot create file: ${getErrorMessage(e)}`
 					});
 				});
 		}
@@ -452,7 +454,7 @@ router.delete('/:host', validate_session, (req, res) => {
 				logger.error('Delete file error:', e);
 				return res.json({
 					success: false,
-					error: `Cannot delete file: ${e.error.message}`
+					error: `Cannot delete file: ${getErrorMessage(e)}`
 				});
 			});
 	});
@@ -591,7 +593,7 @@ router.post('/extract/:host', validate_session, (req, res) => {
 		.catch(e => {
 			return res.json({
 				success: false,
-				error: `Cannot extract archive: ${e.error.message}`
+				error: `Cannot extract archive: ${getErrorMessage(e)}`
 			});
 		});
 	});
@@ -712,7 +714,7 @@ router.post('/compress/:host', validate_session, (req, res) => {
 			.catch(e => {
 				return res.json({
 					success: false,
-					error: `Cannot create archive: ${e.error.message}`
+					error: `Cannot create archive: ${getErrorMessage(e)}`
 				});
 			});
 	});

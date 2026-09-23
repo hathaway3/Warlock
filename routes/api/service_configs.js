@@ -28,15 +28,21 @@ const router = express.Router();
 router.get('/:guid/:host/:service', validate_session, validateHostService, (req, res) => {
 	cmdRunner(req.appInstallData.host, req.appInstallData.getServiceCommandString('get-configs', req.serviceData.service))
 		.then(result => {
+			let configs = [];
+			try {
+				configs = JSON.parse(result.stdout || '[]');
+			} catch {
+				configs = [];
+			}
 			return res.json({
 				success: true,
-				configs: JSON.parse(result.stdout)
+				configs: Array.isArray(configs) ? configs : []
 			});
 		})
 		.catch(e => {
 			return res.json({
 				success: false,
-				error: e.error.message
+				error: (e && e.error && e.error.message) || (e && e.message) || String(e)
 			});
 		});
 });

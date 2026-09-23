@@ -189,6 +189,7 @@ app.use('/api/firewall', require('./routes/api/firewall'));
 app.use('/api/ports', require('./routes/api/ports'));
 app.use('/api/metrics', require('./routes/api/metrics'));
 app.use('/api/job', require('./routes/api/job'));
+app.use('/api/proxmox', require('./routes/api/proxmox'));
 
 
 // Register a generic error handler to use inside this application

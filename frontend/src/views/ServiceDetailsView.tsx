@@ -33,6 +33,8 @@ interface ServiceDetailsViewProps {
   guid: string;
   host: string;
   service: string;
+  initialTab?: TabType;
+  onTabChange?: (tab: TabType) => void;
   onBack: () => void;
 }
 
@@ -42,9 +44,22 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
   guid,
   host,
   service,
+  initialTab,
+  onTabChange,
   onBack,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'overview');
+
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const handleSwitchTab = (tab: TabType) => {
+    setActiveTab(tab);
+    onTabChange?.(tab);
+  };
   const [serviceData, setServiceData] = useState<ServiceData | null>(null);
   const [hostData, setHostData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -409,6 +424,34 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
   const isRunning = serviceData?.status === 'running';
 
+  if (loading && !serviceData) {
+    return (
+      <div className="p-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+        <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
+        <span className="text-sm font-mono">Loading service telemetry and configuration...</span>
+      </div>
+    );
+  }
+
+  if (!loading && !serviceData) {
+    return (
+      <div className="p-12 rounded-2xl bg-white/[0.02] border border-white/10 text-center space-y-4 max-w-lg mx-auto mt-12">
+        <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto" />
+        <h3 className="text-lg font-bold text-white">Service Not Found or Unreachable</h3>
+        <p className="text-xs text-slate-400">
+          Unable to retrieve details for service <code className="text-cyan-400">{service}</code> on host <code className="text-cyan-400">{host}</code>. The host may be offline or the service may have been uninstalled.
+        </p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Toast Alert */}
@@ -609,7 +652,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
       <div className="flex items-center gap-1.5 border-b border-white/10 pb-2 overflow-x-auto scrollbar-none">
         <button
           type="button"
-          onClick={() => setActiveTab('overview')}
+          onClick={() => handleSwitchTab('overview')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'overview'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -622,7 +665,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('terminal')}
+          onClick={() => handleSwitchTab('terminal')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'terminal'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -635,7 +678,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('configs')}
+          onClick={() => handleSwitchTab('configs')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'configs'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -648,7 +691,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('files')}
+          onClick={() => handleSwitchTab('files')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'files'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -661,7 +704,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('backups')}
+          onClick={() => handleSwitchTab('backups')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'backups'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -674,7 +717,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('mods')}
+          onClick={() => handleSwitchTab('mods')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'mods'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -687,7 +730,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
         <button
           type="button"
-          onClick={() => setActiveTab('settings')}
+          onClick={() => handleSwitchTab('settings')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'settings'
               ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
@@ -732,15 +775,17 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
           <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/10 space-y-4">
             <h3 className="text-sm font-semibold text-white">Supported Capabilities</h3>
             <div className="flex flex-wrap gap-2">
-              {hostData?.options?.map((opt: string) => (
-                <span
-                  key={opt}
-                  className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-xs font-mono"
-                >
-                  {opt}
-                </span>
-              )) || (
-                <span className="text-xs text-slate-500 font-mono">Default server options</span>
+              {hostData?.options && hostData.options.length > 0 ? (
+                hostData.options.map((opt: string) => (
+                  <span
+                    key={opt}
+                    className="px-2.5 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 text-xs font-mono"
+                  >
+                    {opt}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-slate-500 font-mono">Default server capabilities</span>
               )}
             </div>
           </div>
@@ -794,6 +839,10 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
                 }
               }}
             />
+          ) : configs.length === 0 ? (
+            <div className="p-12 text-center text-xs text-slate-500 font-mono bg-white/[0.02] border border-white/10 rounded-2xl">
+              No configurable options found for this game service.
+            </div>
           ) : (
             <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

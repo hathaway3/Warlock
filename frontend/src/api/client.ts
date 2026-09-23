@@ -44,7 +44,15 @@ class ApiClient {
       window.dispatchEvent(new CustomEvent('warlock:unauthorized'));
     }
 
-    const json = await response.json();
+    let json: any;
+    try {
+      json = await response.json();
+    } catch {
+      if (!response.ok) {
+        throw new Error(`Server returned error HTTP ${response.status} (${response.statusText || 'Unknown error'})`);
+      }
+      throw new Error('Server returned an invalid non-JSON response');
+    }
     return json;
   }
 
@@ -299,6 +307,10 @@ class ApiClient {
     return this.request<{ success: boolean; sshKey?: string; setupCommand?: string; error?: string }>('/api/hosts/ssh-key');
   }
 
+  async getEnrollmentToken(): Promise<{ success: boolean; token?: string; command?: string; bootstrapCommand?: string; serverUrl?: string; expiresIn?: number; expiresAt?: number; error?: string }> {
+    return this.request<{ success: boolean; token?: string; command?: string; bootstrapCommand?: string; serverUrl?: string; expiresIn?: number; expiresAt?: number; error?: string }>('/api/hosts/enroll-token');
+  }
+
   async addHost(ip: string): Promise<{ success: boolean; message?: string; host?: any; error?: string; sshKey?: string; setupCommand?: string }> {
     return this.request<{ success: boolean; message?: string; host?: any; error?: string; sshKey?: string; setupCommand?: string }>('/api/hosts', {
       method: 'POST',
@@ -309,6 +321,48 @@ class ApiClient {
   async deleteHost(host: string): Promise<ApiResponse> {
     return this.request<ApiResponse>(`/api/hosts/${encodeURIComponent(host)}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Proxmox VE
+  async getProxmoxCommunityScript(params: { disk?: number; cores?: number; ram?: number; bridge?: string; vlan?: string } = {}): Promise<{ success: boolean; command?: string; error?: string }> {
+    return this.request<{ success: boolean; command?: string; error?: string }>('/api/proxmox/community-script', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  }
+
+  async testProxmox(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string; rejectUnauthorized?: boolean }): Promise<{ success: boolean; message?: string; version?: any; error?: string }> {
+    return this.request<{ success: boolean; message?: string; version?: any; error?: string }>('/api/proxmox/test', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async getProxmoxNodes(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string; rejectUnauthorized?: boolean }): Promise<{ success: boolean; nodes?: any[]; error?: string }> {
+    return this.request<{ success: boolean; nodes?: any[]; error?: string }>('/api/proxmox/nodes', {
+      method: 'POST',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async provisionProxmoxLxc(payload: {
+    host: string;
+    tokenUser: string;
+    tokenId: string;
+    tokenSecret: string;
+    rejectUnauthorized?: boolean;
+    node: string;
+    hostname?: string;
+    storage?: string;
+    cores?: number;
+    memory?: number;
+    disk?: number;
+    bridge?: string;
+  }): Promise<{ success: boolean; message?: string; vmid?: number; hostname?: string; error?: string }> {
+    return this.request<{ success: boolean; message?: string; vmid?: number; hostname?: string; error?: string }>('/api/proxmox/provision', {
+      method: 'POST',
+      body: JSON.stringify(payload),
     });
   }
 

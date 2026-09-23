@@ -80,10 +80,14 @@ window.addEventListener('DOMContentLoaded', () => {
 	});
 
 	let hostsTarget = document.getElementById('installAppHostList');
-	hostData.forEach(host => {
-		// Render each host on page load so they're available for metrics polling.
-		hostsTarget.appendChild(renderHost(host));
-	});
+	if (!hostData || hostData.length === 0) {
+		hostsTarget.innerHTML = '<div class="info-message warning-message" style="margin-top: 10px;"><p>No cluster hosts configured. Please <a href="/host/add">add a host</a> before installing a game application.</p></div>';
+	} else {
+		hostData.forEach(host => {
+			// Render each host on page load so they're available for metrics polling.
+			hostsTarget.appendChild(renderHost(host));
+		});
+	}
 
 	applicationSelect.addEventListener('change', () => {
 		const selectedApp = applicationSelect.value;
@@ -204,7 +208,9 @@ window.addEventListener('DOMContentLoaded', () => {
 				hostsHTML += renderHost(host, isCompatible, compatibleNotice);
 			});
 
-			//document.getElementById('installAppHostList').innerHTML = hostsHTML;
+			if (!hostData || hostData.length === 0) {
+				hostsTarget.innerHTML = '<div class="info-message warning-message" style="margin-top: 10px;"><p>No cluster hosts configured. Please <a href="/host/add">add a host</a> before installing a game application.</p></div>';
+			}
 			document.getElementById('targetHostsContainer').style.display = 'block';
 		});
 	});

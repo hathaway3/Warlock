@@ -31,7 +31,8 @@ router.get('/:guid/:host/:service', validate_session, validateHostService, (req,
 				res.send(output.stdout);
 			})
 			.catch(e => {
-				res.status(400).send(`Could not retrieve service logs: ${e.error.message}`);
+				const errMsg = (e && e.error && e.error.message) || (e && e.message) || String(e);
+				res.status(400).send(`Could not retrieve service logs: ${errMsg}`);
 			});
 	}
 	else {

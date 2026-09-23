@@ -10,6 +10,8 @@ const {hostPostAdd} = require("../../libs/host_post_add.mjs");
 const {clearTaggedCache} = require("../../libs/cache.mjs");
 const {logger} = require("../../libs/logger.mjs");
 const fs = require('fs');
+const crypto = require('crypto');
+const cache = require('../../libs/cache.mjs').default;
 
 const router = express.Router();
 
@@ -119,6 +121,182 @@ router.get(
 			logger.error(`Error retrieving SSH key: ${err.message}`, { error: err.stack });
 			return res.status(500).json({ success: false, error: 'Failed to retrieve SSH key' });
 		}
+	}
+);
+
+/**
+ * Generate a temporary enrollment token and one-line bootstrap command
+ *
+ * API endpoint: GET /api/hosts/enroll-token
+ */
+router.get(
+	'/enroll-token',
+	validate_session,
+	(req, res) => {
+		try {
+			const token = crypto.randomBytes(16).toString('hex');
+			cache.set(`enroll_${token}`, { createdAt: Date.now() }, 1800);
+
+			const hostHeader = req.get('host') || '127.0.0.1:3077';
+			const protocol = req.protocol || 'http';
+			const serverUrl = `${protocol}://${hostHeader}`;
+			const command = `curl -sSL "${serverUrl}/api/hosts/enroll.sh?token=${token}" | sudo bash`;
+
+			return res.json({
+				success: true,
+				token,
+				command,
+				serverUrl,
+				expiresIn: 1800
+			});
+		} catch (err) {
+			logger.error(`Error generating enrollment token: ${err.message}`, { error: err.stack });
+			return res.status(500).json({ success: false, error: 'Failed to generate enrollment token' });
+		}
+	}
+);
+
+/**
+ * Dynamic shell script for one-line host enrollment
+ *
+ * API endpoint: GET /api/hosts/enroll.sh?token=<token>
+ */
+router.get(
+	'/enroll.sh',
+	(req, res) => {
+		const token = req.query.token;
+		if (!token || !cache.get(`enroll_${token}`)) {
+			res.setHeader('Content-Type', 'text/x-shellscript');
+			return res.status(403).send('#!/usr/bin/env bash\necho "Error: Invalid or expired Warlock enrollment token." >&2\nexit 1\n');
+		}
+
+		let localKey;
+		try {
+			localKey = get_ssh_key();
+		} catch (e) {
+			res.setHeader('Content-Type', 'text/x-shellscript');
+			return res.status(500).send('#!/usr/bin/env bash\necho "Error: Server failed to load SSH key." >&2\nexit 1\n');
+		}
+
+		const hostHeader = req.get('host') || '127.0.0.1:3077';
+		const protocol = req.protocol || 'http';
+		const serverUrl = `${protocol}://${hostHeader}`;
+
+		const script = `#!/usr/bin/env bash
+set -e
+
+echo "========================================="
+echo "   Warlock Host Enrollment Bootstrap     "
+echo "========================================="
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This script must be run as root (e.g. curl ... | sudo bash)" >&2
+    exit 1
+fi
+
+echo "[*] Ensuring .ssh directory exists..."
+mkdir -p /root/.ssh
+chmod 700 /root/.ssh
+
+PUB_KEY="${localKey}"
+
+if ! grep -qF "$PUB_KEY" /root/.ssh/authorized_keys 2>/dev/null; then
+    echo "$PUB_KEY" >> /root/.ssh/authorized_keys
+    echo "[✓] Warlock public key authorized."
+else
+    echo "[✓] Warlock public key already present in authorized_keys."
+fi
+chmod 600 /root/.ssh/authorized_keys
+
+# Detect Primary IPv4
+HOST_IP=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{print $7}' | head -n1 || hostname -I 2>/dev/null | awk '{print $1}')
+if [ -z "$HOST_IP" ]; then
+    HOST_IP=$(hostname -i 2>/dev/null | awk '{print $1}')
+fi
+
+echo "[*] Detected host IP address: $HOST_IP"
+
+# Call back to Warlock server for automatic registration
+echo "[*] Registering host with Warlock fleet manager..."
+CALLBACK_RES=$(curl -s -X POST "${serverUrl}/api/hosts/enroll" \\
+    -H "Content-Type: application/json" \\
+    -d "{\\"token\\":\\"${token}\\",\\"ip\\":\\"$HOST_IP\\"}" 2>/dev/null || true)
+
+if echo "$CALLBACK_RES" | grep -q '"success":true'; then
+    echo "========================================="
+    echo " [✓] SUCCESS: Host enrolled successfully!"
+    echo " Host $HOST_IP is now active in your Warlock fleet."
+    echo "========================================="
+else
+    echo "========================================="
+    echo " [✓] SSH key installed successfully."
+    echo " Host $HOST_IP is ready. You can now complete"
+    echo " registration in the Warlock web console."
+    echo "========================================="
+fi
+`;
+
+		res.setHeader('Content-Type', 'text/x-shellscript');
+		return res.send(script);
+	}
+);
+
+/**
+ * Callback endpoint to register an enrolled host
+ *
+ * API endpoint: POST /api/hosts/enroll
+ */
+router.post(
+	'/enroll',
+	async (req, res) => {
+		const { token, ip } = req.body || {};
+		if (!token || !cache.get(`enroll_${token}`)) {
+			return res.status(403).json({ success: false, error: 'Invalid or expired enrollment token.' });
+		}
+		if (!ip || typeof ip !== 'string' || !ip.trim()) {
+			return res.status(400).json({ success: false, error: 'IP address is required for enrollment.' });
+		}
+
+		const cleanIp = ip.trim();
+
+		// Check if already registered
+		const existing = await Host.findOne({ where: { ip: cleanIp } });
+		if (existing) {
+			cache.del(`enroll_${token}`);
+			return res.json({ success: true, message: 'Host already registered in fleet.', host: existing });
+		}
+
+		// Verify SSH connection
+		const cmd = `ssh -o LogLevel=quiet -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 -o PasswordAuthentication=no root@${cleanIp} echo "SSH Connection Successful"`;
+		exec(cmd, async (error) => {
+			if (error) {
+				logger.warn(`Enrollment SSH verification failed for ${cleanIp}: ${error.message}`);
+				return res.status(422).json({
+					success: false,
+					error: `SSH connection verification failed for ${cleanIp}. Please verify SSH service is running.`
+				});
+			}
+
+			try {
+				const newHost = await Host.create({ ip: cleanIp });
+				clearTaggedCache(cleanIp);
+				cache.del(`enroll_${token}`);
+
+				hostPostAdd(newHost).catch(err => {
+					logger.error(`Error in hostPostAdd for enrolled host ${cleanIp}: ${err.message}`);
+				});
+
+				logger.info(`Host ${cleanIp} enrolled successfully via one-line bootstrap.`);
+				return res.status(201).json({
+					success: true,
+					message: 'Host enrolled and registered successfully.',
+					host: newHost
+				});
+			} catch (dbErr) {
+				logger.error(`Database error registering host ${cleanIp}: ${dbErr.message}`);
+				return res.status(500).json({ success: false, error: 'Database error registering host.' });
+			}
+		});
 	}
 );
 

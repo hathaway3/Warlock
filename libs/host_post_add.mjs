@@ -8,6 +8,7 @@
 import {cmdRunner} from "./cmd_runner.mjs";
 
 export async function hostPostAdd(host) {
+	const target = (typeof host === 'object' && host !== null && host.ip) ? host.ip : host;
 	return new Promise((resolve, reject) => {
 		// Ensure `file` is installed.  Most distros have it by default, but some minimal installs may not.
 		// This is required for proper OS detection later.
@@ -23,11 +24,11 @@ export async function hostPostAdd(host) {
 		};
 
 		// Query the server for the OS type; this will determine which install command to use.
-		cmdRunner(host, 'lsb_release -i 2>/dev/null | sed "s#.*:\\t##"')
+		cmdRunner(target, 'lsb_release -i 2>/dev/null | sed "s#.*:\\t##"')
 			.then(result => {
 				const osRelease = result.stdout.trim().toLowerCase();
 				if (installFileCmds[osRelease]) {
-					cmdRunner(host, installFileCmds[osRelease]).then(() => {
+					cmdRunner(target, installFileCmds[osRelease]).then(() => {
 						resolve();
 					});
 				}

@@ -76,7 +76,7 @@ router.get('/:host', validate_session, (req, res) => {
 		.catch(e => {
 			return res.json({
 				success: false,
-				error: e.error.message
+				error: (e && e.error && e.error.message) || (e && e.message) || String(e)
 			});
 		});
 	});

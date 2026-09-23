@@ -14,6 +14,12 @@ describe('HostsView Component', () => {
       },
     });
     vi.restoreAllMocks();
+    vi.spyOn(api, 'getEnrollmentToken').mockResolvedValue({
+      success: true,
+      token: 'testtoken123',
+      command: 'curl -sSL "http://localhost:3077/api/hosts/enroll.sh?token=testtoken123" | sudo bash',
+      expiresIn: 1800,
+    });
   });
 
   const renderWithClient = () => {
@@ -24,7 +30,7 @@ describe('HostsView Component', () => {
     );
   };
 
-  it('renders hosts list and clicking Add Host button opens the modal', async () => {
+  it('renders hosts list and clicking Add Host button opens the modal on Bootstrap tab', async () => {
     vi.spyOn(api, 'getHosts').mockResolvedValue([
       { id: 1, ip: '192.168.1.100', os: 'Debian 12' },
     ]);
@@ -40,12 +46,18 @@ describe('HostsView Component', () => {
     expect(addHostBtns.length).toBeGreaterThan(0);
     fireEvent.click(addHostBtns[0]);
 
-    // Modal should now be open
+    // Modal should now be open with tabs
     expect(await screen.findByRole('heading', { name: /Add Server Host/i })).toBeDefined();
-    expect(screen.getByPlaceholderText(/192.168.1.100 or localhost/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /One-Line Bootstrap/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Proxmox VE/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Manual IP/i })).toBeDefined();
+
+    // Verify bootstrap command is rendered
+    expect(await screen.findByText(/enroll\.sh\?token=testtoken123/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Copy Bootstrap Command/i })).toBeDefined();
   });
 
-  it('submits new host via api.addHost and closes modal on success', async () => {
+  it('navigates to Manual tab, submits new host via api.addHost, and closes modal on success', async () => {
     vi.spyOn(api, 'getHosts').mockResolvedValue([]);
     const addHostSpy = vi.spyOn(api, 'addHost').mockResolvedValue({
       success: true,
@@ -64,6 +76,10 @@ describe('HostsView Component', () => {
 
     expect(await screen.findByRole('heading', { name: /Add Server Host/i })).toBeDefined();
 
+    // Switch to Manual tab
+    const manualTabBtn = screen.getByRole('button', { name: /Manual IP/i });
+    fireEvent.click(manualTabBtn);
+
     const input = screen.getByPlaceholderText(/192.168.1.100 or localhost/i);
     fireEvent.change(input, { target: { value: '10.0.0.5' } });
 
@@ -79,7 +95,7 @@ describe('HostsView Component', () => {
     });
   });
 
-  it('displays SSH setup command and retry button when SSH connection fails', async () => {
+  it('displays SSH setup command and retry button when SSH connection fails on Manual tab', async () => {
     vi.spyOn(api, 'getHosts').mockResolvedValue([]);
     vi.spyOn(api, 'addHost').mockResolvedValue({
       success: false,
@@ -89,13 +105,16 @@ describe('HostsView Component', () => {
 
     const { container } = renderWithClient();
 
-    // Wait for empty state to render
     expect(await screen.findByText('No Hosts Configured')).toBeDefined();
 
     const addHostBtns = screen.getAllByRole('button', { name: /Add Host/i });
     fireEvent.click(addHostBtns[0]);
 
     expect(await screen.findByRole('heading', { name: /Add Server Host/i })).toBeDefined();
+
+    // Switch to Manual tab
+    const manualTabBtn = screen.getByRole('button', { name: /Manual IP/i });
+    fireEvent.click(manualTabBtn);
 
     const input = screen.getByPlaceholderText(/192.168.1.100 or localhost/i);
     fireEvent.change(input, { target: { value: '192.168.1.200' } });
@@ -108,6 +127,34 @@ describe('HostsView Component', () => {
     expect(container.querySelector('pre')?.textContent).toContain('echo "ssh-key" >> ~/.ssh/authorized_keys');
     expect(screen.getByRole('button', { name: /Retry Connection/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Copy Setup Command/i })).toBeDefined();
+  });
+
+  it('renders Proxmox VE tab with Community Script option and direct API inputs', async () => {
+    vi.spyOn(api, 'getHosts').mockResolvedValue([]);
+
+    renderWithClient();
+
+    const addHostBtns = screen.getAllByRole('button', { name: /Add Host/i });
+    fireEvent.click(addHostBtns[0]);
+
+    // Switch to Proxmox VE tab
+    const proxmoxTabBtn = screen.getByRole('button', { name: /Proxmox VE/i });
+    fireEvent.click(proxmoxTabBtn);
+
+    expect(await screen.findByText(/Proxmox VE Provisioning & Integration/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Community Script \(LXC\)/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Proxmox VE API \(Automated\)/i })).toBeDefined();
+
+    // Check community script command is displayed
+    expect(screen.getByText(/community-scripts\.org\/scripts\/debian/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Copy Proxmox Shell Command/i })).toBeDefined();
+
+    // Switch to Proxmox API sub-tab
+    const apiSubTabBtn = screen.getByRole('button', { name: /Proxmox VE API \(Automated\)/i });
+    fireEvent.click(apiSubTabBtn);
+
+    expect(screen.getByPlaceholderText(/https:\/\/192.168.1.50:8006/i)).toBeDefined();
+    expect(screen.getByRole('button', { name: /Connect & Discover Nodes/i })).toBeDefined();
   });
 
   it('handles host deletion with confirmation modal', async () => {

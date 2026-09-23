@@ -16,15 +16,21 @@ router.get('/:guid/:host', validate_session, validateHostApplication, (req, res)
 
 	cmdRunner(req.appInstallData.host, req.appInstallData.getCommandString('get-configs'))
 		.then(result => {
+			let configs = [];
+			try {
+				configs = JSON.parse(result.stdout || '[]');
+			} catch {
+				configs = [];
+			}
 			return res.json({
 				success: true,
-				configs: JSON.parse(result.stdout)
+				configs: Array.isArray(configs) ? configs : []
 			});
 		})
 		.catch(e => {
 			return res.json({
 				success: false,
-				error: e.error.message,
+				error: (e && e.error && e.error.message) || (e && e.message) || String(e),
 			});
 		});
 });
