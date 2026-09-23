@@ -57,16 +57,25 @@ class ApiClient {
   }
 
   // Applications
-  async getApplications(): Promise<AppData[]> {
-    const res = await this.request<{ success: boolean; applications: AppData[] }>('/api/applications?all=1');
+  async getApplications(signal?: AbortSignal): Promise<AppData[]> {
+    const res = await this.request<{ success: boolean; applications: AppData[] }>(
+      '/api/applications?all=1',
+      {},
+      signal
+    );
     return res.applications || [];
   }
 
+
   // Services
-  async getServices(): Promise<ServiceData[]> {
-    const res = await this.request<{ success: boolean; services: any[] }>('/api/services');
+  async getServices(signal?: AbortSignal): Promise<ServiceData[]> {
+    const res = await this.request<{ success: boolean; services: any[] }>(
+      '/api/services',
+      {},
+      signal
+    );
     if (!res.success || !res.services) return [];
-    
+
     return res.services.map(s => ({
       guid: s.guid || s.host?.guid,
       host: s.host?.host || s.host,
@@ -84,92 +93,179 @@ class ApiClient {
   }
 
   // Service Details
-  async getServiceDetails(guid: string, host: string, service: string): Promise<{ success: boolean; service: ServiceData; host: any }> {
+  async getServiceDetails(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<{ success: boolean; service: ServiceData; host: any }> {
     return this.request<{ success: boolean; service: ServiceData; host: any }>(
-      `/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      `/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {},
+      signal
     );
   }
 
   // Service Control
-  async controlService(guid: string, host: string, service: string, action: string, force = false): Promise<ApiResponse> {
-    return this.request<ApiResponse>(`/api/service/control/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`, {
-      method: 'POST',
-      body: JSON.stringify({ action, force }),
-    });
+  async controlService(
+    guid: string,
+    host: string,
+    service: string,
+    action: string,
+    force = false,
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
+    return this.request<ApiResponse>(
+      `/api/service/control/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ action, force }),
+      },
+      signal
+    );
   }
 
-  async createService(guid: string, host: string, service: string): Promise<ApiResponse> {
-    return this.request<ApiResponse>(`/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`, {
-      method: 'PUT',
-    });
+  async createService(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
+    return this.request<ApiResponse>(
+      `/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {
+        method: 'PUT',
+      },
+      signal
+    );
   }
 
-  async deleteService(guid: string, host: string, service: string): Promise<ApiResponse> {
-    return this.request<ApiResponse>(`/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`, {
-      method: 'DELETE',
-    });
+  async deleteService(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
+    return this.request<ApiResponse>(
+      `/api/service/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {
+        method: 'DELETE',
+      },
+      signal
+    );
   }
 
   // Service Configs
-  async getServiceConfigs(guid: string, host: string, service: string): Promise<ServiceConfigItem[]> {
+  async getServiceConfigs(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<ServiceConfigItem[]> {
     const res = await this.request<{ success: boolean; configs?: ServiceConfigItem[] }>(
-      `/api/service/configs/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      `/api/service/configs/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {},
+      signal
     );
     return res.configs || [];
   }
 
-  async saveServiceConfigs(guid: string, host: string, service: string, updates: Record<string, any>): Promise<ApiResponse> {
+  async saveServiceConfigs(
+    guid: string,
+    host: string,
+    service: string,
+    updates: Record<string, any>,
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
     return this.request<ApiResponse>(
       `/api/service/configs/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
       {
         method: 'POST',
         body: JSON.stringify(updates),
-      }
+      },
+      signal
     );
   }
 
   // Service Commands
-  async getServiceCommands(guid: string, host: string, service: string): Promise<string[]> {
+  async getServiceCommands(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<string[]> {
     const res = await this.request<{ success: boolean; commands?: string[] }>(
-      `/api/service/cmd/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      `/api/service/cmd/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {},
+      signal
     );
     return res.commands || [];
   }
 
-  async sendServiceCommand(guid: string, host: string, service: string, command: string): Promise<{ success: boolean; output?: string; error?: string }> {
+  async sendServiceCommand(
+    guid: string,
+    host: string,
+    service: string,
+    command: string,
+    signal?: AbortSignal
+  ): Promise<{ success: boolean; output?: string; error?: string }> {
     return this.request<{ success: boolean; output?: string; error?: string }>(
       `/api/service/cmd/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
       {
         method: 'POST',
         body: JSON.stringify({ command }),
-      }
+      },
+      signal
     );
   }
 
   // Service Mods
-  async getServiceMods(guid: string, host: string, service: string): Promise<{ success: boolean; output?: string; error?: string }> {
+  async getServiceMods(
+    guid: string,
+    host: string,
+    service: string,
+    signal?: AbortSignal
+  ): Promise<{ success: boolean; output?: string; error?: string }> {
     return this.request<{ success: boolean; output?: string; error?: string }>(
-      `/api/service/mods/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`
+      `/api/service/mods/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
+      {},
+      signal
     );
   }
 
-  async installServiceMod(guid: string, host: string, service: string, id: string, provider = 'steam'): Promise<ApiResponse> {
+  async installServiceMod(
+    guid: string,
+    host: string,
+    service: string,
+    id: string,
+    provider = 'steam',
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
     return this.request<ApiResponse>(
       `/api/service/mods/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
       {
         method: 'POST',
         body: JSON.stringify({ id, provider }),
-      }
+      },
+      signal
     );
   }
 
-  async removeServiceMod(guid: string, host: string, service: string, id: string, provider?: string): Promise<ApiResponse> {
+  async removeServiceMod(
+    guid: string,
+    host: string,
+    service: string,
+    id: string,
+    provider?: string,
+    signal?: AbortSignal
+  ): Promise<ApiResponse> {
     return this.request<ApiResponse>(
       `/api/service/mods/${encodeURIComponent(guid)}/${encodeURIComponent(host)}/${encodeURIComponent(service)}`,
       {
         method: 'DELETE',
         body: JSON.stringify({ id, provider }),
-      }
+      },
+      signal
     );
   }
 
@@ -367,16 +463,27 @@ class ApiClient {
   }
 
   // Tokens (Issue #28)
-  async getTokens(): Promise<ApiToken[]> {
-    const res = await this.request<{ success: boolean; data: ApiToken[] }>('/api/users/tokens');
+  async getTokens(signal?: AbortSignal): Promise<ApiToken[]> {
+    const res = await this.request<{ success: boolean; data: ApiToken[] }>(
+      '/api/users/tokens',
+      {},
+      signal
+    );
     return res.data || [];
   }
 
-  async createToken(name: string, expiresInDays?: number): Promise<ApiResponse<{ token: string; name: string }>> {
+
+  async createToken(
+    name: string,
+    expiresInDays?: number,
+    signal?: AbortSignal
+  ): Promise<ApiResponse<{ token: string; name: string }>> {
     return this.request<ApiResponse<{ token: string; name: string }>>('/api/users/tokens', {
       method: 'POST',
       body: JSON.stringify({ name, expires_in_days: expiresInDays }),
-    });
+      },
+      signal
+    );
   }
 
   async revokeToken(id: number): Promise<ApiResponse> {
