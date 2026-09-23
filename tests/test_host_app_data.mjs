@@ -1,6 +1,5 @@
 import {test} from 'node:test';
 import assert from 'node:assert';
-import {AppInstallData} from "../libs/app_install_data.mjs";
 
 
 test('AppInstallData v1 API', async (t) => {
@@ -62,11 +61,10 @@ Usage: manage.py [OPTIONS] COMMAND [ARGS]...
 	});
 
 	// Import AFTER mocking so it picks up the mock
-	const { AppInstallData } = await import('../libs/app_install_data.mjs');
+	const { AppInstallData } = await import('../libs/app_install_data.mjs?v2');
 
 	const host = new AppInstallData('testhost', '/path/to/app');
 	await host.init();
-	console.log(host.options);
 	assert.strictEqual(host.options.includes('start'), true, 'Expected options to include start');
 	assert.strictEqual(host.options.includes('restart'), true, 'Expected options to include restart');
 	assert.strictEqual(host.options.includes('delayed-restart'), true, 'Expected options to include delayed-restart');

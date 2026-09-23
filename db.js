@@ -159,11 +159,41 @@ const HostMetric = sequelize.define('HostMetric', {
 	timestamps: false
 });
 
+// ApiToken model for token-based authentication (Issue #28)
+const ApiToken = sequelize.define('ApiToken', {
+	name: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	token_hash: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		unique: true
+	},
+	token_prefix: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	user_id: {
+		type: DataTypes.INTEGER,
+		allowNull: false
+	},
+	last_used_at: {
+		type: DataTypes.DATE,
+		allowNull: true
+	},
+	expires_at: {
+		type: DataTypes.DATE,
+		allowNull: true
+	}
+});
+
 module.exports = {
 	sequelize,
 	User,
 	Host,
 	Meta,
 	Metric,
-	HostMetric
+	HostMetric,
+	ApiToken
 };

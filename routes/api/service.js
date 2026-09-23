@@ -53,7 +53,7 @@ router.put('/:guid/:host/:service', validate_session, validateHostApplication, (
 	// Execute the command via manage.py
 	const cmd = req.appInstallData.getServiceCommandString('create-service', req.params.service);
 	cmdRunner(req.appInstallData.host, cmd)
-		.then(output => {
+		.then(async output => {
 			// On updates to the service state, clear the cache for the application
 			clearTaggedCache(req.appInstallData.host, req.appInstallData.guid);
 			clearTaggedCache(req.appInstallData.host, 'files');
@@ -66,6 +66,16 @@ router.put('/:guid/:host/:service', validate_session, validateHostApplication, (
 
 			if (lastLine.startsWith('CreatedService:')) {
 				newService = lastLine.split(':')[1].trim();
+			}
+
+			// Palworld requires REST API to be enabled for Warlock monitoring
+			const isPalworld = req.appInstallData.guid === 'e4cd1462-87ec-213b-f0fa-7e2a1ba72e2d';
+			if (isPalworld && newService) {
+				try {
+					await cmdRunner(req.appInstallData.host, req.appInstallData.getServiceCommandString('set-config', newService, 'RESTAPIEnabled', 'True'));
+				} catch (err) {
+					// Continue even if setting initial config flag encounters a non-fatal warning
+				}
 			}
 
 			res.json({

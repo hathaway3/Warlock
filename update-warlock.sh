@@ -23,6 +23,24 @@ fi
 
 cd "$INSTALL_DIR" || exit 1
 
+# Detect interactive vs piped execution
+if [ ! -t 0 ] && [ -c /dev/tty ]; then
+	exec < /dev/tty
+fi
+
+# Detect non-interactive flags
+NON_INTERACTIVE=0
+for arg in "$@"; do
+	case "$arg" in
+		--yes|-y|--non-interactive)
+			NON_INTERACTIVE=1
+			;;
+	esac
+done
+if [ ! -t 0 ]; then
+	NON_INTERACTIVE=1
+fi
+
 GIT_OWNER=$(stat -c '%U' .git)
 CURRENT_USER=$(whoami)
 
@@ -30,8 +48,14 @@ CURRENT_USER=$(whoami)
 if [ "$EUID" -eq 0 ]; then
 	# Running as root, check if current user is the git owner
 	if [ "$CURRENT_USER" != "$GIT_OWNER" ]; then
-		# Re-run as the git owner
-		exec sudo -u "$GIT_OWNER" "$0" "$@"
+		# Re-run as the git owner using sudo, runuser, or su
+		if command -v sudo >/dev/null 2>&1; then
+			exec sudo -u "$GIT_OWNER" "$0" "$@"
+		elif command -v runuser >/dev/null 2>&1; then
+			exec runuser -u "$GIT_OWNER" -- "$0" "$@"
+		else
+			exec su - "$GIT_OWNER" -c "$0 $*"
+		fi
 		exit 0
 	fi
 else
@@ -70,46 +94,51 @@ while IFS=$'\t' read -r branch date commit; do
 	commits+=("$commit")
 done < <(git for-each-ref --sort=-committerdate --format='%(refname)	%(committerdate:short)	%(objectname:short)' refs/remotes/origin | sed 's|refs/remotes/||')
 
-# Display branches
-echo ""
-echo "Available remote branches:"
-echo ""
-
-for i in "${!branches[@]}"; do
-	if [ "${branches[$i]}" == "$CURRENT_BRANCH" ]; then
-		echo "  [$((i+1))] * ${branches[$i]} (${dates[$i]}) ${commits[$i]} [CURRENT]"
-	else
-		echo "  [$((i+1))] ${branches[$i]} (${dates[$i]}) ${commits[$i]}"
-	fi
-done
-
-echo ""
-echo "  [0] Cancel"
-echo ""
-
-# Get user selection (empty selection uses current branch)
-read -p "Select branch number to switch/upgrade (default: $CURRENT_BRANCH): " selection
-
-# Use current branch if no selection provided
-if [ -z "$selection" ]; then
-	echo "Using current branch: $CURRENT_BRANCH"
+if [ "$NON_INTERACTIVE" -eq 1 ]; then
+	echo "Non-interactive mode: Using current branch ($CURRENT_BRANCH)"
 	selected_branch="$CURRENT_BRANCH"
 else
-	# Validate selection
-    if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 0 ] || [ "$selection" -gt "${#branches[@]}" ]; then
-    	echo "Error: Invalid selection."
-    	exit 1
-    fi
+	# Display branches
+	echo ""
+	echo "Available remote branches:"
+	echo ""
 
-    # Check if user cancelled
-    if [ "$selection" -eq 0 ]; then
-    	echo "Cancelled."
-    	exit 0
-    fi
+	for i in "${!branches[@]}"; do
+		if [ "${branches[$i]}" == "$CURRENT_BRANCH" ]; then
+			echo "  [$((i+1))] * ${branches[$i]} (${dates[$i]}) ${commits[$i]} [CURRENT]"
+		else
+			echo "  [$((i+1))] ${branches[$i]} (${dates[$i]}) ${commits[$i]}"
+		fi
+	done
 
-    # Adjust for 0-based array indexing
-    selection=$((selection - 1))
-    selected_branch="${branches[$selection]}"
+	echo ""
+	echo "  [0] Cancel"
+	echo ""
+
+	# Get user selection (empty selection uses current branch)
+	read -r -p "Select branch number to switch/upgrade (default: $CURRENT_BRANCH): " selection || selection=""
+
+	# Use current branch if no selection provided
+	if [ -z "$selection" ]; then
+		echo "Using current branch: $CURRENT_BRANCH"
+		selected_branch="$CURRENT_BRANCH"
+	else
+		# Validate selection
+		if ! [[ "$selection" =~ ^[0-9]+$ ]] || [ "$selection" -lt 0 ] || [ "$selection" -gt "${#branches[@]}" ]; then
+			echo "Error: Invalid selection."
+			exit 1
+		fi
+
+		# Check if user cancelled
+		if [ "$selection" -eq 0 ]; then
+			echo "Cancelled."
+			exit 0
+		fi
+
+		# Adjust for 0-based array indexing
+		selection=$((selection - 1))
+		selected_branch="${branches[$selection]}"
+	fi
 fi
 
 if [ "$selected_branch" == "$CURRENT_BRANCH" ]; then
@@ -172,12 +201,12 @@ if [ -f "install-warlock.sh" ]; then
 	if [ -f ".env" ]; then
 		# This is expected to be ran in update mode
 		echo "Running installer to apply any necessary updates..."
-		./install-warlock.sh --update
+		./install-warlock.sh --update "$@"
 	else
 		# but can also run as a new installation if .env is missing,
 		# ie: if called from the bootstrap script after cloning a new branch
 		echo "Running installer to complete new installation..."
-		./install-warlock.sh
+		./install-warlock.sh "$@"
 	fi
 else
 	echo "Warning: install-warlock.sh not found. Please run the installer manually to apply any necessary updates."

@@ -54,13 +54,24 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, asyn
 
 	// Multiple updates can be sent in a single request, but run them one-at-a-time.
 	let errors = '';
+	const isPalworld = req.appInstallData.guid === 'e4cd1462-87ec-213b-f0fa-7e2a1ba72e2d';
+
 	for (let option in configUpdates) {
 		const value = configUpdates[option];
+
+		// Palworld requires REST API to be enabled for Warlock monitoring and control
+		if (isPalworld && (option === 'RESTAPIEnabled' || option === 'bEnableRESTAPI')) {
+			if (value === false || value === 'False' || value === '0' || value === 0) {
+				errors += 'RESTAPIEnabled is required by Warlock and cannot be disabled for Palworld.\n';
+				continue;
+			}
+		}
+
 		try {
 			await cmdRunner(req.appInstallData.host, req.appInstallData.getServiceCommandString('set-config', req.serviceData.service, option, value));
 		}
 		catch (e) {
-			errors += e.error.message + '\n';
+			errors += (e.error ? e.error.message : e.message) + '\n';
 		}
 	}
 

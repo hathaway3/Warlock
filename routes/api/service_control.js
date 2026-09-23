@@ -23,9 +23,9 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 	const guid = req.appInstallData.guid,
 		host = req.appInstallData.host,
 		service = req.serviceData.service,
-		{ action } = req.body || null;
+		{ action, force } = req.body || {};
 
-	const validActions = ['start', 'stop', 'restart', 'enable', 'disable', 'delayed-stop', 'delayed-restart'];
+	const validActions = ['start', 'stop', 'restart', 'enable', 'disable', 'delayed-stop', 'delayed-restart', 'force-stop'];
 	if (!validActions.includes(action)) {
 		return res.json({
 			success: false,
@@ -35,23 +35,45 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 
 	let clearNeeded = true, cmd;
 
-	if (action === 'delayed-stop' && !req.appInstallData.options.includes('delayed-stop')) {
-		return res.json({
-			success: false,
-			error: `Delayed stop not enabled for host '${host}' in application '${guid}'`
-		});
-	}
-
-	if (action === 'delayed-restart' && !req.appInstallData.options.includes('delayed-restart')) {
-		return res.json({
-			success: false,
-			error: `Delayed restart not enabled for host '${host}' in application '${guid}'`
-		});
-	}
-
-	if (action === 'delayed-stop' || action === 'delayed-restart') {
+	if (action === 'force-stop' || (action === 'stop' && (force === true || force === 'true'))) {
+		// Immediately kill and stop the service without waiting for pre-stop or graceful timeouts
 		clearNeeded = false;
-		cmd = req.appInstallData.getServiceCommandString(action, service) + ' &'; // Run in background to avoid waiting for completion
+		cmd = `systemctl kill -s SIGKILL ${service} 2>/dev/null; systemctl stop ${service}`;
+	}
+	else if (action === 'delayed-stop') {
+		if (!req.appInstallData.options.includes('delayed-stop')) {
+			return res.json({
+				success: false,
+				error: `Delayed stop not enabled for host '${host}' in application '${guid}'`
+			});
+		}
+
+		// If there are zero players connected or force is requested, stop immediately instead of delaying
+		const playerCount = typeof req.serviceData.player_count === 'number' ? req.serviceData.player_count : 0;
+		if (playerCount === 0 || force === true || force === 'true') {
+			clearNeeded = false;
+			cmd = `systemctl stop ${service}`;
+		} else {
+			clearNeeded = false;
+			cmd = req.appInstallData.getServiceCommandString(action, service) + ' &'; // Run in background to avoid waiting for completion
+		}
+	}
+	else if (action === 'delayed-restart') {
+		if (!req.appInstallData.options.includes('delayed-restart')) {
+			return res.json({
+				success: false,
+				error: `Delayed restart not enabled for host '${host}' in application '${guid}'`
+			});
+		}
+
+		const playerCount = typeof req.serviceData.player_count === 'number' ? req.serviceData.player_count : 0;
+		if (playerCount === 0 || force === true || force === 'true') {
+			clearNeeded = false;
+			cmd = `systemctl restart ${service}`;
+		} else {
+			clearNeeded = false;
+			cmd = req.appInstallData.getServiceCommandString(action, service) + ' &';
+		}
 	}
 	else if (action === 'enable' || action === 'disable') {
 		clearNeeded = true;

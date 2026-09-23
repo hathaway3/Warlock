@@ -7,12 +7,23 @@
 # This is meant as a one-liner that users can run with curl or wget to quickly set up Warlock.
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/BitsNBytes25/Warlock/main/bootstrap.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | bash
+#   or:
+#   su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
+#
+# Options:
+#   --repo <url>      Override git repository URL (default: https://github.com/hathaway3/Warlock.git)
+#   --branch <name>   Override branch to clone (default: main)
+#   All other options are forwarded directly to update-warlock.sh and install-warlock.sh:
+#   --yes, -y         Non-interactive mode
+#   --fqdn <domain>   Set server domain name non-interactively
+#   --skip-nginx      Skip Nginx installation
+#   --skip-systemd    Skip systemd installation
 #
 # @author Charlie Powell <cdp1337@bitsnbytes.dev>
 # @license AGPLv3.0
 # @see https://warlock.nexus
-# @source https://github.com/BitsNBytes25/Warlock
+# @source https://github.com/hathaway3/Warlock
 #
 
 set -e  # Exit on any error
@@ -22,6 +33,15 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
+
+# Detect interactive vs piped execution
+if [ ! -t 0 ] && [ -c /dev/tty ]; then
+	exec < /dev/tty
+fi
+
+# Ensure debconf and needrestart do not prompt interactively on Debian 11/12/13
+export DEBIAN_FRONTEND=noninteractive
+export NEEDRESTART_MODE=a
 
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then
@@ -35,16 +55,16 @@ echo -e "${GREEN}Starting Warlock bootstrap setup...${NC}"
 if ! command -v git &> /dev/null; then
 	echo -e "${YELLOW}Git not found. Installing git...${NC}"
 	if command -v apt-get &> /dev/null; then
-		apt-get update
-		apt-get install -y git
+		apt-get update -qq
+		apt-get install -y --no-install-recommends git ca-certificates curl
 	elif command -v dnf &> /dev/null; then
-		dnf install -y git
+		dnf install -y git ca-certificates curl
 	elif command -v yum &> /dev/null; then
-		yum install -y git
+		yum install -y git ca-certificates curl
 	elif command -v pacman &> /dev/null; then
-		pacman -S --noconfirm git
+		pacman -S --noconfirm git ca-certificates curl
 	elif command -v apk &> /dev/null; then
-		apk add git
+		apk add git ca-certificates curl
 	else
 		echo -e "${RED}Error: Could not detect package manager to install git${NC}" >&2
 		exit 1
@@ -53,6 +73,35 @@ if ! command -v git &> /dev/null; then
 else
 	echo -e "${GREEN}Git is already installed${NC}"
 fi
+
+# Repository and branch configuration (can be overridden via environment or CLI args)
+REPO_URL="${WARLOCK_REPO:-https://github.com/hathaway3/Warlock.git}"
+BRANCH="${WARLOCK_BRANCH:-main}"
+
+# Parse optional bootstrap-specific arguments while preserving arguments for update/install
+PASSTHROUGH_ARGS=()
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		--repo)
+			shift
+			if [[ $# -gt 0 ]]; then
+				REPO_URL="$1"
+				shift
+			fi
+			;;
+		--branch)
+			shift
+			if [[ $# -gt 0 ]]; then
+				BRANCH="$1"
+				shift
+			fi
+			;;
+		*)
+			PASSTHROUGH_ARGS+=("$1")
+			shift
+			;;
+	esac
+done
 
 # Create installation directory
 if [ -e "/var/www/Warlock" ]; then
@@ -75,14 +124,14 @@ chmod a+rx /var/www
 if [[ -d "$INSTALL_DIR/.git" ]]; then
 	echo -e "${YELLOW}Warlock repository already exists at $INSTALL_DIR.${NC}"
 else
-	echo -e "${YELLOW}Cloning Warlock repository to $INSTALL_DIR...${NC}"
-	git clone https://github.com/BitsNBytes25/Warlock.git "$INSTALL_DIR"
+	echo -e "${YELLOW}Cloning Warlock repository from $REPO_URL ($BRANCH) to $INSTALL_DIR...${NC}"
+	git clone -b "$BRANCH" "$REPO_URL" "$INSTALL_DIR"
 fi
 
 echo -e "${GREEN}Repository ready at $INSTALL_DIR${NC}"
 
 cd "$INSTALL_DIR"
 chmod +x update-warlock.sh
-./update-warlock.sh
+./update-warlock.sh "${PASSTHROUGH_ARGS[@]}"
 
 echo -e "${GREEN}Warlock bootstrap setup completed successfully!${NC}"

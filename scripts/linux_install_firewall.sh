@@ -409,6 +409,9 @@ function install_ufw() {
 
 	package_install ufw
 
+	# Ensure SSH access is preserved before enabling firewall
+	ufw allow 22/tcp comment 'SSH access'
+
 	# Auto-enable a newly installed firewall
 	ufw --force enable
 	systemctl enable ufw

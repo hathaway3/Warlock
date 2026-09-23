@@ -104,6 +104,11 @@ app.use(express.static(path.join(__dirname, 'public')));
  **               Application/UI Endpoints
  ***************************************************************/
 
+// Serve the modern decoupled SPA
+app.use('/spa', (req, res) => {
+	res.sendFile(path.join(__dirname, 'public', 'dist', 'index.html'));
+});
+
 app.use('/', require('./routes/index'));
 app.use('/install', require('./routes/install'));
 app.use('/files', require('./routes/files'));
@@ -131,6 +136,7 @@ app.use('/test', require('./routes/test'));
  **                      API Endpoints
  ***************************************************************/
 
+app.use('/api/auth', require('./routes/api/auth'));
 app.use('/api/applications', require('./routes/api/applications'));
 app.use('/api/file', require('./routes/api/file'));
 app.use('/api/files', require('./routes/api/files'));
@@ -164,56 +170,60 @@ const PORT = process.env.PORT || 3077;
 const HOST = process.env.IP || '127.0.0.1';
 const SKIP_AUTOMATIONS = process.env.SKIP_AUTOMATIONS === '1';
 
-// Start the server
-app.listen(PORT, HOST, () => {
-	if (fs.existsSync('/.dockerenv')) {
-		// If running in Docker, check to make sure we're not listening on 127.0.0.1/localhost.
-		// Doing so inside a container is pointless, as it won't be accessible from outside.
-		if (HOST === '127.0.0.1' || HOST === 'localhost') {
-			logger.warn(`Warlock is listening on ${HOST}:${PORT} ONLY - this will probably not work how you think it will.`);
-			logger.warn('Recommended setting IP=0.0.0.0 instead.');
+// Start the server if executed directly
+if (require.main === module) {
+	app.listen(PORT, HOST, () => {
+		if (fs.existsSync('/.dockerenv')) {
+			// If running in Docker, check to make sure we're not listening on 127.0.0.1/localhost.
+			// Doing so inside a container is pointless, as it won't be accessible from outside.
+			if (HOST === '127.0.0.1' || HOST === 'localhost') {
+				logger.warn(`Warlock is listening on ${HOST}:${PORT} ONLY - this will probably not work how you think it will.`);
+				logger.warn('Recommended setting IP=0.0.0.0 instead.');
+			}
+			else {
+				logger.info(`Running in Docker and listening on ${HOST} port ${PORT}`);
+			}
 		}
 		else {
-			logger.info(`Running in Docker and listening on ${HOST} port ${PORT}`);
+			logger.info(`Listening on ${HOST} port ${PORT}`);
 		}
-	}
-	else {
-		logger.info(`Listening on ${HOST} port ${PORT}`);
-	}
 
-	if (!SKIP_AUTOMATIONS) {
-		// Sequelize doesn't handle cleaning up _backup tables all the time, so manually check if there are any.
-		sequelize.showAllSchemas().then(res => {
-			let dropPromises = [];
-			res.forEach(schema => {
-				if (schema.name && schema.name.endsWith('_backup')) {
-					const tableName = schema.name;
-					logger.info(`Dropping leftover backup table: ${tableName}`);
-					dropPromises.push(sequelize.getQueryInterface().dropTable(tableName));
-				}
-			});
+		if (!SKIP_AUTOMATIONS) {
+			// Sequelize doesn't handle cleaning up _backup tables all the time, so manually check if there are any.
+			sequelize.showAllSchemas().then(res => {
+				let dropPromises = [];
+				res.forEach(schema => {
+					if (schema.name && schema.name.endsWith('_backup')) {
+						const tableName = schema.name;
+						logger.info(`Dropping leftover backup table: ${tableName}`);
+						dropPromises.push(sequelize.getQueryInterface().dropTable(tableName));
+					}
+				});
 
-			Promise.allSettled(dropPromises).then(() => {
-				// Ensure the sqlite database is up to date with the schema.
-				sequelize.sync({ alter: true }).then(() => {
-					logger.info('Initialized database connection and synchronized schema.');
+				Promise.allSettled(dropPromises).then(() => {
+					// Ensure the sqlite database is up to date with the schema.
+					sequelize.sync({ alter: true }).then(() => {
+						logger.info('Initialized database connection and synchronized schema.');
 
-					// Send a tracking snippet to our analytics server so we can monitor basic usage.
-					push_analytics('Start');
+						// Send a tracking snippet to our analytics server so we can monitor basic usage.
+						push_analytics('Start');
 
-					MetricsPollTask();
-					setInterval(MetricsPollTask, 60000); // Run every 60 seconds
+						MetricsPollTask();
+						setInterval(MetricsPollTask, 60000); // Run every 60 seconds
 
-					HostMetricsPollTask();
-					setInterval(HostMetricsPollTask, 60000); // Run every 60 seconds
+						HostMetricsPollTask();
+						setInterval(HostMetricsPollTask, 60000); // Run every 60 seconds
 
-					MetricsMergeTask();
-					setInterval(MetricsMergeTask, 3600000); // Run every hour
+						MetricsMergeTask();
+						setInterval(MetricsMergeTask, 3600000); // Run every hour
 
-					HostMetricsMergeTask();
-					setInterval(HostMetricsMergeTask, 3600000); // Run every hour
+						HostMetricsMergeTask();
+						setInterval(HostMetricsMergeTask, 3600000); // Run every hour
+					});
 				});
 			});
-		});
-	}
-});
+		}
+	});
+}
+
+module.exports = app;

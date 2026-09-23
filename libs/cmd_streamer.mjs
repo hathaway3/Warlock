@@ -42,12 +42,13 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 			// Run the remote command under bash on the remote host so complex shell
 			// constructs (pipes, redirects, &&, etc.) don't require fragile quoting.
 			// Using separate args for ssh prevents local shell escaping issues.
+			const escapedCmd = cmd.replace(/'/g, "'\\''");
 			spawnCommand = 'ssh';
 			spawnArgs = [
 				'-o', 'LogLevel=quiet',
 				'-o', 'StrictHostKeyChecking=no',
 				`root@${target}`,
-				'bash', '-lc', `'${cmd}'`
+				'bash', '-lc', `'${escapedCmd}'`
 			];
 		}
 
@@ -60,13 +61,13 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 		activeJobs.set(jobId, process);
 		res.write(`event: jobid\ndata: ${jobId}\n\n`);
 
-		// Helper to send data to client as SSE data: lines prefixed with "data: " and double newline
+		// Helper to send data to client as standard W3C SSE
 		const sendData = (pipe, chunk) => {
 			const lines = String(chunk).split(/\r?\n/);
 			for (const line of lines) {
 				if (line.length === 0) continue;
 				if (clientGone) return;
-				res.write(`${pipe}: ${line}\n\n`);
+				res.write(`event: ${pipe}\ndata: ${line}\n\n`);
 			}
 		};
 
@@ -104,7 +105,7 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 			cleanupListeners();
 			if (clientGone) return;
 
-			res.write(`event: done\ncode: ${code}\n\n`);
+			res.write(`event: done\ncode: ${code}\ndata: ${JSON.stringify({ code: code, signal: signal })}\n\n`);
 			res.end();
 
 			if (code !== 0) {

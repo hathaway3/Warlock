@@ -137,7 +137,7 @@ Debian does not ship with `sudo` by default, so use `su` instead.
 This requires the **root** password to be entered if ran as a non-root user.
 
 ```bash
-su - -c "bash <(wget -qO- https://raw.githubusercontent.com/BitsNBytes25/Warlock/main/bootstrap.sh)" root
+su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
 ```
 
 #### Ubuntu
@@ -146,7 +146,7 @@ Ubuntu and other derivatives ship with `sudo` by default, so you can use the fol
 If prompted for a password, enter your user password.
 
 ```bash
-sudo su - -c "bash <(wget -qO- https://raw.githubusercontent.com/BitsNBytes25/Warlock/main/bootstrap.sh)" root
+sudo su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
 ```
 
 
@@ -165,7 +165,7 @@ pacman -S git
 mkdir -p /var/www
 chmod a+rx /var/www
 cd /var/www
-git clone https://github.com/BitsNBytes25/Warlock.git
+git clone https://github.com/hathaway3/Warlock.git
 cd Warlock
 ./install-warlock.sh
 ```

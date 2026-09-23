@@ -67,16 +67,16 @@ npm start      # Production
 ### Remote Server Dependencies
 The remote server must have:
 - SSH access configured for root user
-- `/home/steam/VEIN/manage.py` script for game server management
+- Game management scripts (e.g. `manage.py` / `warlock-manager`) per application
 - Standard Unix utilities (ps, df, free, top, etc.) for system monitoring
 
 ## Project-Specific Patterns
 
 ### SSH Command Structure
-All remote operations follow this pattern:
+All remote operations execute dynamically against hosts configured in the database:
 ```javascript
-const command = `ssh root@45.26.230.248 'command_here'`;
-exec(command, callback);
+// Target host is resolved dynamically from SQLite DB (Host model)
+cmdRunner(targetHost, command);
 ```
 
 ### Error Handling Convention
@@ -86,29 +86,27 @@ API responses use consistent structure:
 ```
 
 ### Frontend Update Pattern
-Real-time components follow this pattern:
+Real-time components consume SSE streams:
 ```javascript
-async function fetchData() { /* API call */ }
-setInterval(fetchData, 3000);  // 3-second updates
+// Stream real-time service and host telemetry
+stream('/api/service/stream/...', 'GET', ...);
 ```
 
 ### CSS Architecture
-- Embedded styles in each HTML file
-- Consistent color scheme: `#0096ff` (primary blue), `#1a1a2e` (dark background)
-- Orbitron font for headers, Rajdhani for body text
-- Grid layouts with responsive cards
+- Modern dark cyberpunk palette
+- CSS Container queries and responsive grid layouts
 
 ## Integration Points
 
 ### Remote Server Communication
-- **SSH Key Authentication**: Assumes passwordless SSH to root@45.26.230.248
-- **Game Management Script**: `/home/steam/VEIN/manage.py` handles all server lifecycle
-- **System Monitoring**: Custom shell commands for real-time stats collection
+- **SSH Key Authentication**: Uses key-based authentication (`~/.ssh/id_rsa` or host-configured keys) to connect as root to managed hosts
+- **Game Management Scripts**: Dynamically discovered per application installed on each host (`manage.py` v1/v2 API)
+- **System Monitoring**: Custom shell scriptlets executed via `cmdRunner` and streamed via `cmdStreamer`
 
 ### File System Operations
-- Upload directory: Server handles file storage location
-- File browsing: Recursive directory navigation via SSH commands
-- File viewing: Direct file content retrieval via SSH
+- Upload directory: Remote host handles file storage location
+- File browsing: Directory navigation via SSH commands (`/api/file`)
+- File viewing: Direct file content retrieval via SSH with MIME detection
 
 ## Common Operations
 
