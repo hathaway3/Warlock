@@ -44,8 +44,8 @@ router.get('/:host', validate_session, (req, res) => {
 			const tempFile = `/tmp/warlock_download_${Date.now()}_${path.basename(filePath)}`;
 			filePushRunner(host, tempFile, filePath, true).then(() => {
 				return res.download(tempFile, path.basename(filePath), (err) => {
-					// Remove the temporary file after download
-					fs.unlinkSync(tempFile);
+					// Remove the temporary file asynchronously after download
+					fs.promises.unlink(tempFile).catch(() => {});
 					if (err) {
 						logger.error('File download error:', err);
 					}
@@ -277,8 +277,8 @@ router.post('/:host', validate_session, (req, res) => {
 					});
 				})
 				.finally(() => {
-					// Remove the temporary file
-					fs.unlinkSync(tempFile);
+					// Remove the temporary file asynchronously
+					fs.promises.unlink(tempFile).catch(() => {});
 				});
 		} else {
 			// No content supplied, that's fine!  We can still create an empty file.
@@ -366,7 +366,7 @@ router.put('/:host', validate_session, (req, res) => {
 					logger.warn(`Uploaded file size (${stats.size}) does not match expected size (${size}) for file:`, filePath);
 
 					// Reject the upload attempt, the client should retry the upload
-					fs.unlinkSync(tempFile);
+					fs.promises.unlink(tempFile).catch(() => {});
 					return res.json({
 						success: false,
 						error: 'Uploaded file size does not match expected size, please retry the upload'
@@ -394,10 +394,8 @@ router.put('/:host', validate_session, (req, res) => {
 					});
 				})
 				.finally(() => {
-					// Remove the temporary file
-					if (fs.existsSync(tempFile)) {
-						fs.unlinkSync(tempFile);
-					}
+					// Remove the temporary file asynchronously
+					fs.promises.unlink(tempFile).catch(() => {});
 				});
 		});
 

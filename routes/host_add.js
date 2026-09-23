@@ -9,6 +9,7 @@ const {hostPostAdd} = require("../libs/host_post_add.mjs");
 const cache = require("../libs/cache.mjs");
 const fs = require('fs');
 const {clearTaggedCache} = require("../libs/cache.mjs");
+const { logger } = require("../libs/logger.mjs");
 
 const router = express.Router();
 const csrfProtection = csrf({ cookie: true });
@@ -66,7 +67,7 @@ router.post(
 					return res.redirect('/hosts');
 				})
 				.catch(err => {
-					console.error('Error adding host to database:', err);
+					logger.error(`Error adding host ${ip} to database: ${err.message}`, { error: err.stack });
 					return res.render(
 						'host_add', {error: 'Error adding host to database. Please try again.', ip}
 					);
@@ -81,7 +82,7 @@ router.post(
 		const cmd = `ssh -o LogLevel=quiet -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=5 -o PasswordAuthentication=no root@${ip} echo "SSH Connection Successful"`;
 		exec(cmd, async (error, stdout, stderr) => {
 			if (error) {
-				console.error(`SSH connection error: ${error.message}`);
+				logger.error(`SSH connection error for host ${ip}: ${error.message}`);
 				return res.render(
 					'host_add',
 					{
@@ -93,9 +94,9 @@ router.post(
 				);
 			}
 			if (stderr) {
-				console.error(`SSH connection stderr: ${stderr}`);
+				logger.warn(`SSH connection stderr for host ${ip}: ${stderr}`);
 			}
-			console.log(`SSH connection stdout: ${stdout}`);
+			logger.debug(`SSH connection stdout for host ${ip}: ${stdout}`);
 
 			// If successful, add the host to the database if necessary
 			if (!existingHost) {
@@ -108,7 +109,7 @@ router.post(
 				clearTaggedCache(ip);
 				return res.redirect('/hosts');
 			}).catch(e => {
-				console.error('Error during post-add operations:', e);
+				logger.error(`Error during post-add operations for host ${ip}: ${e.message}`, { error: e.stack });
 				return res.redirect('/hosts');
 			});
 		});

@@ -2,6 +2,7 @@ const express = require('express');
 const {validate_session} = require("../../libs/validate_session.mjs");
 const {Metric, HostMetric} = require('../../db.js');
 const {Op, fn, col, literal} = require('sequelize');
+const { logger } = require('../../libs/logger.mjs');
 const router = express.Router();
 
 // Retrieve historical metrics for a service
@@ -87,7 +88,7 @@ router.get('/:ip/:service', validate_session, async (req, res) => {
 			data: results
 		});
 	} catch (error) {
-		console.error('Error retrieving metrics:', error);
+		logger.error(`Error retrieving metrics for ${ip}/${service}: ${error.message}`, { error: error.stack });
 		return res.json({success: false, error: error.message});
 	}
 });
@@ -173,7 +174,7 @@ router.get('/:ip', validate_session, async (req, res) => {
 			data: results
 		});
 	} catch (error) {
-		console.error('Error retrieving metrics:', error);
+		logger.error(`Error retrieving metrics for ${ip}: ${error.message}`, { error: error.stack });
 		return res.json({success: false, error: error.message});
 	}
 });

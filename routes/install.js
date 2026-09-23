@@ -4,6 +4,7 @@ const router = express.Router();
 const csrf = require('@dr.pogodin/csurf');
 const bodyParser = require('body-parser');
 const fs = require('fs');
+const { logger } = require("../libs/logger.mjs");
 
 let csrfProtection = csrf({ cookie: true });
 let parseForm = bodyParser.urlencoded({ extended: false });
@@ -60,7 +61,7 @@ router.post('/', parseForm, csrfProtection, (req, res) => {
 			}
 		})
 		.catch(err => {
-			console.error('Error creating user:', err);
+			logger.error(`Error creating user: ${err.message}`, { error: err.stack });
 			res.render('install', {error: 'Error creating user. Please try again.'});
 		});
 });

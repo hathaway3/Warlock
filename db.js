@@ -10,8 +10,33 @@ function sequelizeLog(sql) {
 const sequelize = new Sequelize({
 	dialect: 'sqlite',
 	storage: process.env.DB_PATH || 'warlock.sqlite',
-	logging: sequelizeLog
+	logging: sequelizeLog,
+	pool: {
+		max: 5,
+		min: 0,
+		acquire: 30000,
+		idle: 10000
+	},
+	retry: {
+		max: 5,
+		match: [
+			/SQLITE_BUSY/,
+			/database is locked/
+		]
+	}
 });
+
+// Configure SQLite pragmas for high concurrency & resilience
+async function configureSqlitePragmas() {
+	try {
+		await sequelize.query('PRAGMA journal_mode = WAL;');
+		await sequelize.query('PRAGMA busy_timeout = 5000;');
+		await sequelize.query('PRAGMA synchronous = NORMAL;');
+	} catch (err) {
+		logger.debug('SQLite PRAGMA configuration notice:', err.message);
+	}
+}
+const pragmaInitPromise = configureSqlitePragmas();
 
 // User model with username and password fields
 const User = sequelize.define('User', {
@@ -190,6 +215,8 @@ const ApiToken = sequelize.define('ApiToken', {
 
 module.exports = {
 	sequelize,
+	configureSqlitePragmas,
+	pragmaInitPromise,
 	User,
 	Host,
 	Meta,

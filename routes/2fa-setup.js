@@ -8,6 +8,7 @@ const router = express.Router();
 const csrfProtection = csrf({ cookie: true });
 const parseForm = bodyParser.urlencoded({ extended: false });
 const twofactor = require("node-2fa");
+const { logger } = require("../libs/logger.mjs");
 
 
 router.get('/', validate_session, csrfProtection, (req, res) => {
@@ -61,7 +62,7 @@ router.post('/', validate_session, parseForm, csrfProtection, (req, res) => {
 			// Redirect to dashboard
 			res.redirect('/dashboard');
 		}).catch((err) => {
-			console.error('Error saving 2FA secret:', err);
+			logger.error(`Error saving 2FA secret: ${err.message}`, { error: err.stack });
 			res.render('2fa-setup', {error: 'Error saving 2FA settings. Please try again.'});
 		});
 	});

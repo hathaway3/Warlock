@@ -28,7 +28,7 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 		if (hostLookup === 0) {
 			res.write(`event: error\ndata: Target host '${target}' not found in database.\n\n`);
 			res.end();
-			return reject();
+			return reject(new Error(`Target host '${target}' not found in database.`));
 		}
 
 		if (target === 'localhost' || target === '127.0.0.1') {
@@ -109,7 +109,7 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 			res.end();
 
 			if (code !== 0) {
-				reject();
+				reject(new Error(`Command exited with status code ${code}${signal ? ` (signal: ${signal})` : ''}`));
 			}
 			else {
 				resolve();
@@ -123,7 +123,7 @@ export async function cmdStreamer(target, cmd, res, ignoreClose = false) {
 
 			res.write(`event: error\ndata: ${err.message}\n\n`);
 			res.end();
-			reject();
+			reject(err);
 		});
 
 		// Track client disconnects

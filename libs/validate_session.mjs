@@ -1,5 +1,6 @@
 import { User, ApiToken } from '../db.js';
 import crypto from 'crypto';
+import { logger } from './logger.mjs';
 
 export const validate_session = async (req, res, next) => {
 	const isApiRequest = (req.originalUrl && req.originalUrl.startsWith('/api')) ||
@@ -47,7 +48,7 @@ export const validate_session = async (req, res, next) => {
 					}
 				}
 			} catch (err) {
-				console.error('Error validating API token:', err);
+				logger.error('Error validating API token:', err);
 				if (isApiRequest) {
 					return res.status(500).json({ success: false, error: 'Internal Server Error' });
 				}
@@ -107,7 +108,7 @@ export const validate_session = async (req, res, next) => {
 				return;
 			}
 		} catch (err) {
-			console.error('Database error during session validation:', err);
+			logger.error(`Database error during session validation: ${err.message}`, { error: err.stack });
 			if (isApiRequest) {
 				return res.status(500).json({ success: false, error: 'Internal Server Error' });
 			}

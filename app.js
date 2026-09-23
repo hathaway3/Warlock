@@ -82,12 +82,41 @@ app.locals.assetUrl = function(assetPath) {
 	return `${assetPath}?v=${packageJson.version}`;
 }
 
+// Top-level crash traps to prevent silent process termination
+process.on('unhandledRejection', (reason, promise) => {
+	logger.error('Unhandled Promise Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+	logger.error('Uncaught Exception thrown:', err);
+	if (process.env.NODE_ENV === 'production') {
+		process.exit(1);
+	}
+});
+
 app.use(cookieParser());
 
+const SQLiteStore = require('connect-sqlite3')(session);
+const dbStoragePath = process.env.DB_PATH || path.join(__dirname, 'warlock.sqlite');
+const sessionDbDir = path.isAbsolute(dbStoragePath) ? path.dirname(dbStoragePath) : __dirname;
+
+const sessionStore = new SQLiteStore({
+	db: 'warlock-sessions.sqlite',
+	dir: sessionDbDir,
+	concurrentDB: true
+});
+
 app.use(session({
+	store: sessionStore,
 	secret: process.env.SESSION_SECRET || 'warlock_secret_key',
 	resave: false, // don't save session if unmodified
 	saveUninitialized: false, // don't create session until something stored
+	cookie: {
+		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+		httpOnly: true,
+		sameSite: 'lax',
+		secure: process.env.COOKIE_SECURE === 'true'
+	}
 }));
 
 
@@ -170,9 +199,11 @@ const PORT = process.env.PORT || 3077;
 const HOST = process.env.IP || '127.0.0.1';
 const SKIP_AUTOMATIONS = process.env.SKIP_AUTOMATIONS === '1';
 
+let server;
+
 // Start the server if executed directly
 if (require.main === module) {
-	app.listen(PORT, HOST, () => {
+	server = app.listen(PORT, HOST, () => {
 		if (fs.existsSync('/.dockerenv')) {
 			// If running in Docker, check to make sure we're not listening on 127.0.0.1/localhost.
 			// Doing so inside a container is pointless, as it won't be accessible from outside.
@@ -224,6 +255,30 @@ if (require.main === module) {
 			});
 		}
 	});
+
+	// Graceful shutdown handler for systemd / docker SIGTERM & SIGINT
+	const gracefulShutdown = (signal) => {
+		logger.info(`Received ${signal}. Starting graceful shutdown...`);
+		if (server) {
+			server.close(() => {
+				logger.info('HTTP server closed.');
+				sequelize.close().then(() => {
+					logger.info('Database connection closed.');
+					process.exit(0);
+				}).catch(() => process.exit(0));
+			});
+
+			setTimeout(() => {
+				logger.warn('Forcing shutdown after 10s timeout.');
+				process.exit(1);
+			}, 10000).unref();
+		} else {
+			process.exit(0);
+		}
+	};
+
+	process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+	process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 }
 
 module.exports = app;

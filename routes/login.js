@@ -3,6 +3,7 @@ const {User} = require("../db");
 const csrf = require('@dr.pogodin/csurf');
 const bodyParser = require('body-parser');
 const twofactor = require("node-2fa");
+const { logger } = require("../libs/logger.mjs");
 
 const router = express.Router();
 const csrfProtection = csrf({ cookie: true });
@@ -63,7 +64,7 @@ router.post('/', parseForm, csrfProtection, (req, res) => {
 			res.redirect('/dashboard');
 		})
 		.catch(err => {
-			console.error('Error during login:', err);
+			logger.error(`Error during login: ${err.message}`, { error: err.stack });
 			res.status(500).send('Internal Server Error');
 		});
 });

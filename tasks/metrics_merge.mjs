@@ -12,7 +12,15 @@ import {logger} from "../libs/logger.mjs";
  *
  * @constructor
  */
+let isMerging = false;
+
 export async function MetricsMergeTask() {
+	if (isMerging) {
+		logger.debug('MetricsMergeTask: Previous merge still active; skipping tick.');
+		return;
+	}
+	isMerging = true;
+
 	const now = Math.floor(Date.now() / 1000),
 		oneDay = 24 * 60 * 60,
 		oneWeek = 7 * oneDay,
@@ -47,6 +55,8 @@ export async function MetricsMergeTask() {
 		logger.info('MetricsMergeTask: Completed successfully');
 	} catch (error) {
 		logger.error('MetricsMergeTask: Error merging metrics:', error.message);
+	} finally {
+		isMerging = false;
 	}
 }
 

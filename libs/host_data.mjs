@@ -317,8 +317,8 @@ export class HostData {
 						tx_last: metrics.net_total_tx,
 						tx: metrics.net_tx
 					}).catch(err => {
-						// Ignore errors here
-						console.error('Error storing host metrics for', this.host, err);
+						// Log error if storing metric fails
+						logger.error(`Error storing host metrics for ${this.host}: ${err.message}`, { error: err.stack });
 					});
 				}
 

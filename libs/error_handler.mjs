@@ -1,3 +1,5 @@
+import { logger } from './logger.mjs';
+
 const taglines = [
 	'Game over, but the adventure continues.',
 	'You missed the jump - try again!',
@@ -26,16 +28,31 @@ const taglines = [
 ];
 
 export const errorHandler = (err, req, res, next) => {
-	const status = err.status || 400;
+	const status = err.status || err.statusCode || 500;
 
-	if (req.accepts('html')) {
-		let tagLine = taglines[Math.floor(Math.random() * taglines.length)];
+	// Always log the error with request context and stack trace
+	const method = req.method || 'GET';
+	const url = req.originalUrl || req.url || '/';
+	const path = req.path || '';
+	logger.error(`[HTTP Error] ${method} ${url} (${status}):`, err);
 
-		return res.status(status).render('error', {error: err, tagLine});
+	// Ensure API and XHR endpoints always receive structured JSON
+	const isApiRoute = url.startsWith('/api') || path.startsWith('/api');
+	const isXhr = !!req.xhr || (req.headers && req.headers['x-requested-with'] === 'XMLHttpRequest');
+	const prefersJson = typeof req.accepts === 'function' ? req.accepts(['json', 'html']) === 'json' : false;
+
+	if (isApiRoute || isXhr || prefersJson) {
+		const response = {
+			success: false,
+			error: err.message || 'An unexpected error occurred',
+			code: err.code || (status === 401 ? 'UNAUTHORIZED' : status === 403 ? 'FORBIDDEN' : 'SERVER_ERROR')
+		};
+		if (process.env.NODE_ENV === 'development') {
+			response.stack = err.stack;
+		}
+		return res.status(status).json(response);
 	}
-	else {
-		// JSON expects a specific structure.
-		let error = { success: false, error: err.message };
-		res.status(status).json(error);
-	}
+
+	let tagLine = taglines[Math.floor(Math.random() * taglines.length)];
+	return res.status(status).render('error', {error: err, tagLine});
 };

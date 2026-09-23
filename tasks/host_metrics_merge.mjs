@@ -12,7 +12,15 @@ import {logger} from "../libs/logger.mjs";
  *
  * @constructor
  */
+let isHostMerging = false;
+
 export async function HostMetricsMergeTask() {
+	if (isHostMerging) {
+		logger.debug('HostMetricsMergeTask: Previous host merge still active; skipping tick.');
+		return;
+	}
+	isHostMerging = true;
+
 	const now = Math.floor(Date.now() / 1000),
 		oneDay = 24 * 60 * 60,
 		oneWeek = 7 * oneDay,
@@ -47,6 +55,8 @@ export async function HostMetricsMergeTask() {
 		logger.info('HostMetricsMergeTask: Completed successfully');
 	} catch (error) {
 		logger.error('HostMetricsMergeTask: Error merging metrics:', error.message);
+	} finally {
+		isHostMerging = false;
 	}
 }
 

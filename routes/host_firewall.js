@@ -1,6 +1,7 @@
 const express = require('express');
 const { validate_session } = require("../libs/validate_session.mjs");
 const { Host } = require('../db');
+const { logger } = require('../libs/logger.mjs');
 const router = express.Router();
 
 // Render firewall UI for a given host (hostid is the IP/hostname)
@@ -14,7 +15,7 @@ router.get('/:host', validate_session, (req, res) => {
 
 		res.render('firewall');
 	}).catch(err => {
-		console.error('Database error checking host:', err);
+		logger.error(`Database error checking host ${host}: ${err.message}`, { error: err.stack });
 		res.status(500).send('Internal Server Error');
 	});
 });

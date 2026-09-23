@@ -4,6 +4,7 @@ const csrf = require('@dr.pogodin/csurf');
 const bodyParser = require('body-parser');
 const {Host} = require("../db");
 const cache = require("../libs/cache.mjs");
+const { logger } = require("../libs/logger.mjs");
 
 const router = express.Router();
 const csrfProtection = csrf({ cookie: true });
@@ -22,7 +23,7 @@ router.get('/:host', validate_session, csrfProtection, (req, res) => {
         }
         return res.render('host_delete', { host, ip });
     }).catch(err => {
-        console.error('Error fetching host:', err);
+        logger.error(`Error fetching host ${ip}: ${err.message}`, { error: err.stack });
         return res.render('host_delete', { error: 'Error fetching host information.', ip });
     });
 });
@@ -42,7 +43,7 @@ router.post('/', parseForm, csrfProtection, validate_session, (req, res) => {
         cache.default.set('all_applications', null, 1); // Invalidate cache
         return res.redirect('/hosts');
     }).catch(err => {
-        console.error('Error deleting host:', err);
+        logger.error(`Error deleting host ${ip}: ${err.message}`, { error: err.stack });
         return res.render('host_delete', { error: 'Failed to delete host. Please try again.', ip });
     });
 });
