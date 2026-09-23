@@ -369,8 +369,7 @@ This includes:
 
 ## AI / LLM Disclaimer
 
-Warlock was originally generated with various models including GPT-5 and Claude Sonnet 4.5
-via Copilot's integration feature.
+Warlock was originally generated and modernized with various tools and models including GPT-5, Claude Sonnet 4.5 via Copilot's integration feature, and Antigravity CLI.
 
 Then it was effectively rewritten because generated code is absolutely rubbish and horribly unmaintainable.
 
