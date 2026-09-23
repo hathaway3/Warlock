@@ -369,8 +369,4 @@ This includes:
 
 ## AI / LLM Disclaimer
 
-Warlock was originally generated and modernized with various tools and models including GPT-5, Claude Sonnet 4.5 via Copilot's integration feature, and Antigravity CLI.
-
-Then it was effectively rewritten because generated code is absolutely rubbish and horribly unmaintainable.
-
-After wasting a week just un-fraking the generated code, now we just use those AI models to generate tiny snippets of code throughout this project.
+This fork of Warlock exclusively uses AI development tools like **Antigravity CLI** and **Claude Code** for its engineering, architectural enhancements, refactoring, test suite development, and ongoing maintenance.
