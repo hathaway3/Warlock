@@ -318,6 +318,12 @@ install_certbot() {
 			export DEBIAN_FRONTEND=noninteractive
 			export NEEDRESTART_MODE=a
 			wait_for_apt_lock
+			# On Ubuntu minimal images, certbot packages are in the universe repository
+			if [ "$DISTRO" == "ubuntu" ]; then
+				if command -v add-apt-repository >/dev/null 2>&1; then
+					add-apt-repository -y universe >/dev/null 2>&1 || true
+				fi
+			fi
 			apt-get update -qq
 			apt-get install -y certbot python3-certbot-nginx
 			;;

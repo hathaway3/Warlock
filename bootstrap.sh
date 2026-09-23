@@ -43,6 +43,25 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 export NEEDRESTART_MODE=a
 
+wait_for_apt_lock() {
+	if ! command -v fuser >/dev/null 2>&1; then
+		return 0
+	fi
+	local count=0
+	local max=30
+	while fuser /var/lib/dpkg/lock-frontend /var/lib/apt/lists/lock /var/lib/dpkg/lock >/dev/null 2>&1; do
+		if [ $count -eq 0 ]; then
+			echo -e "${YELLOW}Waiting for background package management processes (e.g. unattended-upgrades) to release locks...${NC}"
+		fi
+		sleep 2
+		count=$((count + 1))
+		if [ $count -ge $max ]; then
+			echo -e "${YELLOW}Warning: Package manager lock wait timed out; attempting to proceed...${NC}"
+			break
+		fi
+	done
+}
+
 # Check if running as root
 if [[ $EUID -ne 0 ]]; then
 	echo -e "${RED}Error: This script must be run as root${NC}" >&2
@@ -55,6 +74,7 @@ echo -e "${GREEN}Starting Warlock bootstrap setup...${NC}"
 if ! command -v git &> /dev/null; then
 	echo -e "${YELLOW}Git not found. Installing git...${NC}"
 	if command -v apt-get &> /dev/null; then
+		wait_for_apt_lock
 		apt-get update -qq
 		apt-get install -y --no-install-recommends git ca-certificates curl
 	elif command -v dnf &> /dev/null; then

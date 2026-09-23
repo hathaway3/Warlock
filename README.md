@@ -142,10 +142,13 @@ su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/ma
 
 #### Ubuntu
 
-Ubuntu and other derivatives ship with `sudo` by default, so you can use the following command to install Warlock.
-If prompted for a password, enter your user password.
+Ubuntu and other derivatives ship with `sudo` by default:
 
 ```bash
+# Using curl:
+curl -sSL https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh | sudo bash
+
+# Or using wget:
 sudo su - -c "bash <(wget -qO- https://raw.githubusercontent.com/hathaway3/Warlock/main/bootstrap.sh)" root
 ```
 
