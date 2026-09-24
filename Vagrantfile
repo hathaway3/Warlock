@@ -4,7 +4,20 @@ Vagrant.configure("2") do |config|
   # Expose Warlock UI to Windows host browser
   config.vm.network "forwarded_port", guest: 3077, host: 3077
 
+  # Provisioning for VMware Desktop
   config.vm.provider "vmware_desktop" do |v|
+    v.memory = 1024
+    v.cpus = 2
+  end
+
+  # Provisioning for VirtualBox
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 1024
+    v.cpus = 2
+  end
+
+  # Provisioning for Libvirt/KVM
+  config.vm.provider "libvirt" do |v|
     v.memory = 1024
     v.cpus = 2
   end

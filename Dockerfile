@@ -1,45 +1,43 @@
-# syntax=docker/dockerfile:1
-FROM node:24-alpine
-
-# Set working directory
+# Use a multi-stage build for clean separation of build artifacts
+# Stage 1: Build Stage (uses full node environment for build tools)
+FROM node:24-alpine AS build
 WORKDIR /app
 
 # Copy package files and install dependencies
 COPY package*.json ./
+RUN npm install
+
+# Copy the frontend source code and build it
+COPY frontend/ ./frontend
+RUN npm --prefix frontend install
+# Assuming the build script handles the full frontend build
+RUN npm run build:frontend
+
+# Stage 2: Production Runtime Stage (minimal image, only necessary files)
+FROM node:24-alpine AS production
+WORKDIR /app
+
+# Define a health check to ensure basic service availability
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD ["curl", "-f", "http://localhost:3000/health"]
+
+# Install only production dependencies
 RUN npm install --production
 
-# Copy the rest of the application
+# Copy the compiled static assets (SPA build)
+COPY --from=build /app/frontend/dist ./public/dist
+# Copy backend source code
 COPY . .
 
-# Expose the port the app runs on
-EXPOSE 3077
+# Set necessary environment variables
+ENV SKIP_AUTHENTICATION=false \
+    SKIP_2FA=false
 
-# Environment variables for authentication/2FA skipping (can be overridden at runtime)
-ENV SKIP_AUTHENTICATION=false
-ENV SKIP_2FA=false
-ENV IP=0.0.0.0
-ENV NODE_ENV=production
-ENV WARLOCK_PROFILE=false
-
-# Create data directory for database and set default database path
-RUN mkdir -p /app/data
-ENV DB_PATH=/app/data/warlock.sqlite
-
-# Install OpenSSH client for SSH and ssh-keygen support
-RUN apk add --no-cache openssh-client
-
-# Create non-root user 'warlock' and set up home directory with SSH keys
-RUN addgroup -g 1001 warlock
-RUN adduser -D -u 1001 -G warlock -h /home/warlock warlock
-RUN mkdir -p /home/warlock/.ssh
-RUN chown -R warlock:warlock /home/warlock /app/data
-
-# Volume for persistent data (directory containing sqlite db and SSH keys)
-VOLUME ["/app/data"]
-VOLUME ["/home/warlock/.ssh"]
-
-# Switch to non-root user
+# Run as non-root user
 USER warlock
 
-# Start the application
+# Expose the application port (assuming Express runs on 3000)
+EXPOSE 3000
+
+# Command to run the application
 CMD ["npm", "start"]
