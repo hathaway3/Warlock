@@ -249,7 +249,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Footer note */}
           <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-center gap-2 text-[11px] text-slate-500">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>End-to-end encrypted session</span>
+            <span>Secured with TLS encryption</span>
           </div>
         </div>
       </div>

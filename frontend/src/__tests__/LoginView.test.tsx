@@ -45,6 +45,13 @@ describe('LoginView Component', () => {
     });
   });
 
+  it('shows a TLS-accurate footer instead of an end-to-end encryption claim', () => {
+    render(<LoginView onLoginSuccess={vi.fn()} onRequire2faSetup={vi.fn()} />);
+
+    expect(screen.getByText(/Secured with TLS encryption/i)).toBeDefined();
+    expect(screen.queryByText(/End-to-end encrypted/i)).toBeNull();
+  });
+
   it('switches to 2FA code view if require2fa is returned', async () => {
     vi.spyOn(api, 'login').mockResolvedValue({
       success: false,
