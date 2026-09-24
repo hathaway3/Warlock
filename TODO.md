@@ -1,10 +1,40 @@
-Scratch pad for quick notes on things to do. Not necessarily in order of priority.
+* **Security:**
+  * [x] **Shell command injection hardening**: (Completed — added `libs/shell_quote.mjs` (`shellQuote()`, single-quote escaping) and applied it to all user/host-influenced values interpolated into shell command strings in `routes/api/file.js`, `libs/file_push_runner.mjs`, `routes/api/service_control.js`, and `libs/app_install_data.mjs`; covered by `tests/test_shell_quote.mjs`. Path values are still otherwise unconstrained — consider a base-directory allowlist as a follow-up.)
+  * [ ] **Session secret fallback**: `app.js` falls back to a hardcoded `SESSION_SECRET` (`'warlock_secret_key'`) when unset — fail closed in production (throw at startup) or generate and persist one.
+  * [ ] **Proxmox TLS verification**: `libs/proxmox.mjs` defaults `rejectUnauthorized` to `false` (TLS verification off by default) — default to `true` with an explicit opt-out (e.g. `PROXMOX_INSECURE=1`) and document it.
+  * [x] **Auth bypass flags**: (Completed — checks centralized in `libs/auth-utils.js` and reused across `routes/login.js`, `routes/settings.js`, `routes/api/auth.js`, `libs/validate_session.mjs`; loud startup warnings in `app.js`; Dockerfile and docker-compose explicitly set both flags to `false`)
+  * [ ] **Misleading security claim**: `frontend/src/views/LoginView.tsx` footer reads "End-to-end encrypted session" — remove or reword (transport is TLS-protected, not E2E encrypted).
+  * [ ] **Password policy**: initial install enforces a 6-character minimum (LoginView) — raise to 8+ and document.
+  * [ ] **Download temp file naming**: `routes/api/file.js` builds `/tmp/warlock_download_<ts>_<basename>` from a user-supplied basename — sanitize/allowlist the basename to avoid /tmp collisions or symlink issues.
 
-## Completed Items
+* **Documentation:**
+  * [x] **Rewrite `.github/copilot-instructions.md`**: (Completed)
+  * [x] **Populate `CLAUDE.md`**: (Completed)
+  * [ ] **Strip upstream frontmatter from `docs/`**: the `title`/`description`/`order`/`sidebar: cms-pagelist` frontmatter blocks from the upstream CMS site are still present in `docs/index.md`, `docs/install.md`, `docs/dashboard.md`, and the other page files — remove them (manual per-file cleanup).
+  * [x] **Add governance docs**: (Security, Contributing, Conduct files created)
 
-* **Browser History / URL Hash Navigation:**
-  * [x] **Primary Tab Routing**: Hash-based URL routing/history (`#dashboard`, `#hosts`, `#settings`) for the primary navigation tabs so browser back/forward buttons work properly.
-  * [x] **Deep History & Linking (Dashboard & Services)**:
-    * Service details and sub-tabs (`#dashboard/service/:guid/:host/:service` and deep links like `#dashboard/service/:guid/:host/:service/terminal`, `#dashboard/service/.../configs`, etc.).
-    * Host details and sub-tabs (`#hosts/:host`, `#hosts/:host/firewall`, `#hosts/:host/cron`, `#hosts/:host/files`).
-  * [x] **Modal States**: URL state preservation for active dialogs (`#dashboard/install` for the game server installer modal, and `#hosts/add` for the host enrollment modal) supporting back-button dismissal and bookmarking.
+* **Testing / CI:**
+  * [x] **Add a CI quality gate**: (Completed — `.github/workflows/ci-gate.yml` runs backend tests, frontend tests, and oxlint on PR + push to main)
+  * [ ] **Workflow hygiene**: `sync-release.yml` pins `actions/checkout@v6` while the others use `@v4`, and its source-branch detection (`git branch -r --contains ... | head -n 1`) is fragile — pin action versions consistently and simplify branch selection.
+  * [ ] **Type-check frontend tests**: `frontend/tsconfig.app.json` excludes `src/__tests__`, so `tsc -b` never type-checks them — include them (or add a test tsconfig to the build).
+  * [ ] **Test coverage**: no coverage provider on either side — add `@vitest/coverage-v8` for the frontend and `--experimental-test-coverage` for the backend, with a baseline threshold in CI.
+  * [ ] **Dead test dependency**: `@testing-library/jest-dom` is in frontend devDependencies but never imported — remove it or actually use it (`expect.extend`).
+  * [ ] **Dependabot**: no `.github/dependabot.yml` — add it for `npm` (root + `frontend/`) and GitHub Actions.
+
+* **Code Quality:**
+  * [ ] **Hardcoded Palworld GUID**: `routes/api/service.js:72` and `routes/api/service_configs.js:63` special-case GUID `e4cd1462-87ec-213b-f0fa-7e2a1ba72e2d` — move to a named constant or a data-driven flag in `Apps.yaml`.
+  * [x] **Centralize env-flag checks**: (Completed — `libs/auth-utils.js` provides `isAuthSkipped()` / `is2faSkipped()`; used by `routes/login.js`, `routes/settings.js`, `routes/api/auth.js`, `libs/validate_session.mjs`, and `app.js`)
+  * [x] **Lint the backend**: (Completed implementation and verification gate added)
+  * [x] **API client robustness**: (Updated to support AbortController and standardized error handling)
+  * [ ] **Production sourcemaps**: `frontend/vite.config.ts` sets `build.sourcemap: true` — disable for production builds.
+  * [ ] **Accessibility pass**: no `aria-*`/`role=` anywhere in the SPA; login labels aren't associated with inputs (no `htmlFor`/`id`), error text isn't `aria-live`, the 2FA field lacks `inputMode`, and there's no ErrorBoundary or modal focus management — add a baseline a11y pass and consider a jsx-a11y lint rule.
+  * [ ] **Legacy UI duplication**: the full EJS+JS legacy UI (`views/` + `public/assets/`) duplicates the React SPA and stays mounted behind `USE_LEGACY_UI` — plan deprecation/removal (or document which UI is canonical) to cut the maintenance surface.
+
+* **Repo Hygiene:**
+  * [ ] **Stop committing `public/dist`**: (Add to .gitignore and Dockerfile build stage)
+  * [ ] **Release discipline**: (Completed sync of versioning and need to script tag/release flow)
+  * [x] **Populate `CHANGELOG.md` [Unreleased]**: (Completed — SPA migration, Proxmox provisioning, URL hash routing, and telemetry recorded; v1.3.0 cut 2026-09-23)
+  * [x] **`package.json` metadata**: (Completed — author set and description updated to reflect the Express API + React SPA)
+  * [ ] **Script hardening (remaining)**: `install-warlock.sh` / `update-warlock.sh` / `uninstall-warlock.sh` now use `set -euo pipefail`; still open — `bootstrap.sh` has only bare `set -e`, `uninstall-warlock.sh` leaves nginx config/app files behind, and there is no `shellcheck` step in CI.
+  * [ ] **Formatting + IDE leftovers (remaining)**: `.editorconfig` added and `FUNDING.yml` removed; still open — committed `.idea/` in a Node project (including `dataSources.xml` pointing at local sqlite files) — remove or ignore it.
+  * [x] **Docker/Vagrant polish**: (Completed — `HEALTHCHECK` in the Dockerfile; Vagrantfile supports vmware_desktop, virtualbox, and libvirt)

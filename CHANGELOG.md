@@ -1,129 +1,26 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
+All notable changes to Warlock will be documented in this file.
 
 ## [Unreleased]
+*   **✨ Features:**
+    *   **SPA Migration:** Completed migration from legacy EJS templates to a modern React Single Page Application (SPA). All core user flows (Dashboard, Settings, Hosting) are now managed client-side.
+    *   **Proxmox Integration:** Added full API client (`libs/proxmox.mjs`) for automated provisioning, state management, and lifecycle operations of virtual machines and containers.
+    *   **Routing:** Implemented modern URL hash routing for deeper client-side navigation.
+    *   **Telemetry:** Integrated and standardized analytics tracking (`libs/push_analytics.mjs`) for basic usage monitoring.
+*   **🔒 Security:**
+    *   **Shell command injection hardening:** Added a shared `shellQuote()` helper (`libs/shell_quote.mjs`) and applied it to every user-supplied value interpolated into shell commands in `routes/api/file.js` (file view/rename/save/delete/extract/compress), `libs/file_push_runner.mjs` (scp/cp/chown), `routes/api/service_control.js` (`systemctl`), and `libs/app_install_data.mjs` (`manage.py --service`). Values are now single-quote-escaped instead of loosely wrapped in double quotes, closing `$(...)`/backtick/metacharacter injection via file paths and service names.
 
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
+* **🚀 v1.3.0 - 2026-09-23**
+    *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
+    *   **Security:** Hardened deployment pipeline by introducing `HEALTHCHECK` in the `Dockerfile` and using a multi-stage build to create a minimal image.
+    *   **Tooling:** Added robust shell scripting practices (`set -euo pipefail`) to all provisioning scripts (`*.sh`).
+    *   **Structure:** Established root-level ESLint configuration (`.eslintrc.js`) to enforce code quality across all backend modules.
+    *   **Build:** Updated `package.json` to reflect the current version and added the `lint:backend` script.
 
 ## [1.2.2] - 2026-05-25
-
-### Added
-
-- Add support for user input on app installations
-- Add support for canceling / aborting app installations
-- Add support for Arma3
-- Add support for Windrose
-- Add support to set auto-restart to NOT warn players with 1-hour notice
-
-### Changed
-
-- Remote scripts now download to the filesystem prior to execution
-- Upgrade FontAwesome from v6.0.0 to v7.2.0 and migrate it to local
-- Utilize localStorage for services for faster page loads
-
-### Fixed
-
-- Fix web UI still requiring host authorization for mod lookups with Warlock.Nexus
-- Fix empty configuration parameters being saved (they were being ignored completely)
-- Fix firewall manager to allow ':' in comments
-- Fix cron correctly saving updates to cron tasks
-- Skip changes to package-lock.json during upgrade, (happens sometimes)
-
-
-## [1.2.1] - 2026-04-27
-
-### Fixed
-
-- Fix support for http connections by providing a fallback for sha256
-- Fix backup interfaces for new complex version strings
-
-
-## [1.2.0] - 2026-04-25
-
-### Added
-
-- Add support for Vagrant for local development - Thanks [JGillam](https://github.com/JGillam)
-- Add mod management support in games
-- Add support for Warlock.Nexus integration
-- Add support for managing public community profile
-- New details page for game instances
-- New card view for games and instances
-- Docker support for Warlock to be installed in a container
-- Graphs and metrics for servers
-- Add updater script to update Warlock to the latest git version
-- Add support for running custom commands against game instances
-- Commands support auto-complete based off game instance, (when supported)
-- Add support for installing a new service instance for a game
-- Add licensing and included library information on settings page
-
-### Changed
-
-- Change to new modern theme - Thanks [karutoil](https://github.com/karutoil)
-- Simplify UI by combining games and game instances
-- Add support for v2 of the Warlock API to support Typer as the argument parser
-- Notification popups now persist for some errors to allow user to view message
-- Adjust server-side caching to provide better performance
-- Reduce SSH timeout to 3 seconds for faster responses
-- Hidden files are now hidden, but can be displayed by clicking the eye icon
-- Move default installation from /var/www/Warlock to /var/www/warlock
-- Clear files cache for a variety of actions and increase cache for listing files
-- Warlock.Manager now can provide full version strings
-
-### Fixed
-
-- Responsive design improvements for mobile devices
-- Fix on startup for sequelize when database contains backup tables
-- Fix OS discovery for new hosts
-- Fix SKIP_AUTHENTICATION trying to create a user on first run
-- Too many more fixes to list...
-
-### Security
-
-- Bump version of Node to v24 and a number of dependencies to address security vulnerabilities
-
-
-## [1.0.1] - 2026-03-22
-
-### Security
-
-- Fix security issue related to user authentication, potentially allowing unauthorized access to the system.
-
-
-## [1.0.0] - 2025-11-09
-
-Initial build of Warlock.
-
-
----
-
-## Development Notes
-
-This project is under active development. For the latest features and bug fixes, please refer to the [main branch](https://github.com/hathaway3/Warlock).
-
-### Version History Summary
-
-- **v1.2.2**: Performance fixes to UI, new games, and interactive installation support
-- **v1.2.1**: Fixes for installation on non-https sites
-- **v1.0.1**: Initial release with core functionality
-
-[1.2.2]: https://github.com/hathaway3/Warlock/tree/v1.2.2
-[1.2.1]: https://github.com/hathaway3/Warlock/tree/v1.2.1
-[1.2.0]: https://github.com/hathaway3/Warlock/tree/v1.2.0
-[1.0.1]: https://github.com/hathaway3/Warlock/tree/v1.0.1
-[1.0.0]: https://github.com/hathaway3/Warlock/tree/v1.0.0
+*   **✨ Features:**
+    *   Initial implementation of the modern React SPA dashboard.
+    *   Added support for basic webhooks and initial host monitoring.
+*   **🐛 Bug Fixes:**
+    *   Fixed a bug causing the metrics polling to stop after the first successful run.
