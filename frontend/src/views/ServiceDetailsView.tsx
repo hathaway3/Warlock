@@ -435,7 +435,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
   if (!loading && !serviceData) {
     return (
-      <div className="p-12 rounded-2xl bg-white/[0.02] border border-white/10 text-center space-y-4 max-w-lg mx-auto mt-12">
+      <div role="alert" className="p-12 rounded-2xl bg-white/[0.02] border border-white/10 text-center space-y-4 max-w-lg mx-auto mt-12">
         <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto" />
         <h3 className="text-lg font-bold text-white">Service Not Found or Unreachable</h3>
         <p className="text-xs text-slate-400">
@@ -457,6 +457,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
       {/* Toast Alert */}
       {toastMessage && (
         <div
+          role={toastMessage.type === 'success' ? 'status' : 'alert'}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all ${
             toastMessage.type === 'success'
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -480,6 +481,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
             onClick={onBack}
             className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
             title="Back to Dashboard"
+            aria-label="Back to Dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -590,6 +592,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
             disabled={loading}
             className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
             title="Refresh Status"
+            aria-label="Refresh Status"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
           </button>
@@ -850,9 +853,11 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
                   const val = configForm[cfg.option];
                   const isBool = cfg.type === 'bool' || typeof val === 'boolean';
 
+                  const fieldId = `config-${cfg.option}`;
+
                   return (
                     <div key={cfg.option} className="p-3.5 rounded-xl bg-black/30 border border-white/5 space-y-1.5">
-                      <label className="text-xs font-mono font-medium text-cyan-400 block truncate">
+                      <label htmlFor={fieldId} className="text-xs font-mono font-medium text-cyan-400 block truncate">
                         {cfg.option}
                       </label>
                       {cfg.help && (
@@ -863,6 +868,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
 
                       {isBool ? (
                         <button
+                          id={fieldId}
                           type="button"
                           onClick={() => {
                             setConfigForm({ ...configForm, [cfg.option]: !val });
@@ -877,6 +883,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
                         </button>
                       ) : (
                         <input
+                          id={fieldId}
                           type={cfg.type === 'int' ? 'number' : 'text'}
                           value={val ?? ''}
                           onChange={(e) => {
@@ -993,6 +1000,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
                 <input
                   type="text"
                   placeholder="Steam Workshop ID (e.g. 123456789)"
+                  aria-label="Steam Workshop ID to install"
                   value={newModId}
                   onChange={(e) => setNewModId(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
@@ -1013,6 +1021,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
                 <input
                   type="text"
                   placeholder="Mod Identifier to remove"
+                  aria-label="Mod identifier to remove"
                   value={removeModId}
                   onChange={(e) => setRemoveModId(e.target.value)}
                   className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none focus:border-rose-500"
@@ -1087,7 +1096,7 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
             </div>
 
             {updateStatus && (
-              <div className={`p-3 rounded-xl text-xs font-mono border ${updateStatus.updates ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' : 'bg-black/30 border-white/10 text-slate-300'}`}>
+              <div role="status" className={`p-3 rounded-xl text-xs font-mono border ${updateStatus.updates ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' : 'bg-black/30 border-white/10 text-slate-300'}`}>
                 <span>{updateStatus.message}</span>
               </div>
             )}
@@ -1167,10 +1176,10 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
       {/* Delete Instance Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="confirm-remove-modal-title" className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <AlertTriangle className="w-6 h-6" />
-              <h3 className="text-base font-bold text-white">Confirm Removal</h3>
+              <h3 id="confirm-remove-modal-title" className="text-base font-bold text-white">Confirm Removal</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
               Are you sure you want to remove instance <strong className="font-mono text-white">{service}</strong>? This will delete the service instance definition while keeping other instances intact.
@@ -1200,10 +1209,10 @@ export const ServiceDetailsView: React.FC<ServiceDetailsViewProps> = ({
       {/* Uninstall Application Modal */}
       {showUninstallModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+          <div role="dialog" aria-modal="true" aria-labelledby="uninstall-app-modal-title" className="w-full max-w-lg rounded-2xl border border-rose-500/30 bg-[#0e1320] p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <AlertTriangle className="w-6 h-6" />
-              <h3 className="text-base font-bold text-white">Uninstall Application</h3>
+              <h3 id="uninstall-app-modal-title" className="text-base font-bold text-white">Uninstall Application</h3>
             </div>
 
             {!uninstallStreaming ? (
