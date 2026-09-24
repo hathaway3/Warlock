@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: '/dist/',
   plugins: [
     react(),
@@ -29,6 +29,7 @@ export default defineConfig({
   build: {
     outDir: '../public/dist',
     emptyOutDir: true,
-    sourcemap: true,
+    // Ship sourcemaps for local/dev builds only — production bundles shouldn't expose original source.
+    sourcemap: mode !== 'production',
   },
-});
+}));
