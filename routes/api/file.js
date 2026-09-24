@@ -10,6 +10,7 @@ const {buildRemoteExec} = require("../../libs/build_remote_exec.mjs");
 const {correctMimetype} = require("../../libs/correct_mimetype.mjs");
 const crypto = require('crypto');
 const {clearTaggedCache} = require("../../libs/cache.mjs");
+const {shellQuote} = require("../../libs/shell_quote.mjs");
 
 const getErrorMessage = (e) => (e && e.error && e.error.message) || (e && e.message) || String(e);
 
@@ -61,7 +62,8 @@ router.get('/:host', validate_session, (req, res) => {
 		}
 		else {
 			// First check if it's a text file and get its size and basic stats
-			let cmd = `[ -h "${filePath}" ] && F="$(readlink -f "${filePath}")" || F="${filePath}"; ` +
+			const qFilePath = shellQuote(filePath);
+			let cmd = `[ -h ${qFilePath} ] && F="$(readlink -f ${qFilePath})" || F=${qFilePath}; ` +
 				`file --mime-type "$F"; ` + // mimetype, line[0]
 				`stat -c%s "$F"; ` + // filesize, line[1]
 				`echo "$F"; ` + // filename, line[2]
@@ -92,11 +94,11 @@ router.get('/:host', validate_session, (req, res) => {
 
 				if (filesize <= 1024 * 1024 * 10) {
 					if (mimetype.startsWith('text/') || textMimetypes.includes(mimetype)) {
-						cmd = `cat "${filePath}"`;
+						cmd = `cat ${qFilePath}`;
 						encoding = 'raw';
 					} else if (mimetype.startsWith('image/') || mimetype.startsWith('video/')) {
 						// For images/videos, return base64 encoding
-						cmd = `base64 "${filePath}"`;
+						cmd = `base64 ${qFilePath}`;
 						encoding = 'base64';
 					}
 				}
@@ -159,7 +161,7 @@ router.move('/:host', validate_session, (req, res) => {
 	logger.info('Renaming item:', oldPath, '->', newPath);
 
 	// Use mv command to rename
-	cmdRunner(host, `mv "${oldPath}" "${newPath}"`).then(() => {
+	cmdRunner(host, `mv ${shellQuote(oldPath)} ${shellQuote(newPath)}`).then(() => {
 		clearTaggedCache(host, 'files');
 		logger.info('Item renamed successfully:', oldPath, '->', newPath);
 		res.json({
@@ -237,7 +239,8 @@ router.post('/:host', validate_session, (req, res) => {
 		if (isDir) {
 			// Create directory
 			logger.info('Creating directory:', path);
-			let cmd = `mkdir -p "${path}" && chown $(stat -c%U "$(dirname "${path}")"):$(stat -c%U "$(dirname "${path}")") "${path}"`;
+			const qPath = shellQuote(path);
+			let cmd = `mkdir -p ${qPath} && chown $(stat -c%U "$(dirname ${qPath})"):$(stat -c%U "$(dirname ${qPath})") ${qPath}`;
 			cmdRunner(host, cmd).then(() => {
 				clearTaggedCache(host, 'files');
 				logger.debug('Directory created successfully:', path);
@@ -284,7 +287,8 @@ router.post('/:host', validate_session, (req, res) => {
 				});
 		} else {
 			// No content supplied, that's fine!  We can still create an empty file.
-			let cmd = `[ -e "${path}" ] && echo -n "" > "${path}" || touch "${path}"; chown $(stat -c%U "$(dirname "${path}")"):$(stat -c%U "$(dirname "${path}")") "${path}"`;
+			const qPath = shellQuote(path);
+			let cmd = `[ -e ${qPath} ] && echo -n "" > ${qPath} || touch ${qPath}; chown $(stat -c%U "$(dirname ${qPath})"):$(stat -c%U "$(dirname ${qPath})") ${qPath}`;
 			cmdRunner(host, cmd).then(() => {
 				clearTaggedCache(host, 'files');
 				logger.debug('File created successfully:', path);
@@ -442,7 +446,7 @@ router.delete('/:host', validate_session, (req, res) => {
 		}
 
 		logger.info('Deleting file:', path);
-		cmdRunner(host, `rm -fr "${path}"`).then(() => {
+		cmdRunner(host, `rm -fr ${shellQuote(path)}`).then(() => {
 			clearTaggedCache(host, 'files');
 			logger.debug('File deleted successfully:', path);
 			res.json({
@@ -485,7 +489,8 @@ router.post('/extract/:host', validate_session, (req, res) => {
 
 		// Retrieve some information about the file and target environment.
 		// We'll need to know the mimetype of the archive and which archive formats are available.
-		const cmdDiscover = `if [ -e "${path}" ]; then file --mime-type "${path}"; else echo "missing"; fi;` +
+		const qPath = shellQuote(path);
+		const cmdDiscover = `if [ -e ${qPath} ]; then file --mime-type ${qPath}; else echo "missing"; fi;` +
 			'if which unzip &>/dev/null; then echo "zip"; fi;' +
 			'if which unrar &>/dev/null; then echo "rar"; fi;' +
 			'if which tar &>/dev/null; then echo "tar"; echo "tar/gzip"; echo "tar/xz"; echo "tar/bzip2"; fi;' +
@@ -509,18 +514,18 @@ router.post('/extract/:host', validate_session, (req, res) => {
 			'7z': 'https://raw.githubusercontent.com/eVAL-Agency/ScriptsCollection/refs/heads/main/dist/7zip/linux_install_7zip.sh',
 		};
 
-		const cmdSudoPrefix = `sudo -u $(stat -c%U "$(dirname "${path}")")`;
+		const cmdSudoPrefix = `sudo -u $(stat -c%U "$(dirname ${qPath})")`;
 
 		const cmdExtracts = {
-			'zip': `${cmdSudoPrefix} unzip -o "${path}" -d "$(dirname "${path}")/"`,
-			'rar': `${cmdSudoPrefix} unrar x -o+ "${path}" "$(dirname "${path}")/"`,
-			'7z': `${cmdSudoPrefix} 7z x "${path}" -o"$(dirname "${path}")/" -y`,
-			'tar/gzip': `${cmdSudoPrefix} tar -xzf "${path}" -C "$(dirname "${path}")/"`,
-			'tar/bzip2': `${cmdSudoPrefix} tar -xjf "${path}" -C "$(dirname "${path}")/"`,
-			'tar/xz': `${cmdSudoPrefix} tar -xJf "${path}" -C "$(dirname "${path}")/"`,
-			'gzip': `${cmdSudoPrefix} gunzip -c "${path}" > "$(dirname "${path}")/$(basename "${path}" .gz)"`,
-			'bzip2': `${cmdSudoPrefix} bunzip2 -c "${path}" > "$(dirname "${path}")/$(basename "${path}" .bz2)"`,
-			'xz': `${cmdSudoPrefix} unxz -c "${path}" > "$(dirname "${path}")/$(basename "${path}" .xz)"`,
+			'zip': `${cmdSudoPrefix} unzip -o ${qPath} -d "$(dirname ${qPath})/"`,
+			'rar': `${cmdSudoPrefix} unrar x -o+ ${qPath} "$(dirname ${qPath})/"`,
+			'7z': `${cmdSudoPrefix} 7z x ${qPath} -o"$(dirname ${qPath})/" -y`,
+			'tar/gzip': `${cmdSudoPrefix} tar -xzf ${qPath} -C "$(dirname ${qPath})/"`,
+			'tar/bzip2': `${cmdSudoPrefix} tar -xjf ${qPath} -C "$(dirname ${qPath})/"`,
+			'tar/xz': `${cmdSudoPrefix} tar -xJf ${qPath} -C "$(dirname ${qPath})/"`,
+			'gzip': `${cmdSudoPrefix} gunzip -c ${qPath} > "$(dirname ${qPath})/$(basename ${qPath} .gz)"`,
+			'bzip2': `${cmdSudoPrefix} bunzip2 -c ${qPath} > "$(dirname ${qPath})/$(basename ${qPath} .bz2)"`,
+			'xz': `${cmdSudoPrefix} unxz -c ${qPath} > "$(dirname ${qPath})/$(basename ${qPath} .xz)"`,
 		}
 
 		cmdRunner(host, cmdDiscover).then(async output => {
@@ -638,7 +643,9 @@ router.post('/compress/:host', validate_session, (req, res) => {
 			'7z': 'https://raw.githubusercontent.com/eVAL-Agency/ScriptsCollection/refs/heads/main/dist/7zip/linux_install_7zip.sh',
 		};
 
+		const qPath = shellQuote(path);
 		const basename = path.split('/').pop();
+		const qBasename = shellQuote(basename);
 
 		let compressName = '';
 
@@ -667,14 +674,15 @@ router.post('/compress/:host', validate_session, (req, res) => {
 			});
 		}
 
-		const cmdSudoPrefix = `sudo -u $(stat -c%U "$(dirname "${path}")")`;
+		const cmdSudoPrefix = `sudo -u $(stat -c%U "$(dirname ${qPath})")`;
+		const qCompressName = shellQuote(compressName);
 
 		const cmdCompressors = {
-			'zip': `cd "$(dirname "${path}")"; ${cmdSudoPrefix} zip -r "${compressName}" "${basename}"`,
-			'rar': `cd "$(dirname "${path}")"; ${cmdSudoPrefix} rar a "${compressName}" "${basename}"`,
-			'7z': `cd "$(dirname "${path}")"; ${cmdSudoPrefix} 7z a "${compressName}" "${basename}"`,
-			'tar/gz': `${cmdSudoPrefix} tar -czf "$(dirname "${path}")/${compressName}" -C "$(dirname "${path}")" "${basename}"`,
-			'tar/bzip2': `${cmdSudoPrefix} tar -cjf "$(dirname "${path}")/${compressName}" -C "$(dirname "${path}")" "${basename}"`,
+			'zip': `cd "$(dirname ${qPath})"; ${cmdSudoPrefix} zip -r ${qCompressName} ${qBasename}`,
+			'rar': `cd "$(dirname ${qPath})"; ${cmdSudoPrefix} rar a ${qCompressName} ${qBasename}`,
+			'7z': `cd "$(dirname ${qPath})"; ${cmdSudoPrefix} 7z a ${qCompressName} ${qBasename}`,
+			'tar/gz': `${cmdSudoPrefix} tar -czf "$(dirname ${qPath})/"${qCompressName} -C "$(dirname ${qPath})" ${qBasename}`,
+			'tar/bzip2': `${cmdSudoPrefix} tar -cjf "$(dirname ${qPath})/"${qCompressName} -C "$(dirname ${qPath})" ${qBasename}`,
 		}
 
 		cmdRunner(host, cmdDiscover).then(async output => {

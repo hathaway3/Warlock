@@ -1,6 +1,7 @@
 import {cmdRunner} from "./cmd_runner.mjs";
 import {logger} from "./logger.mjs";
 import {VersionCompare} from "./version_compare.mjs";
+import {shellQuote} from "./shell_quote.mjs";
 
 /**
  * Class representing the application data for a specific host and application path.
@@ -172,12 +173,13 @@ export class AppInstallData {
 			throw new Error(`Option '${option}' is not supported by ${this.path} on ${this.host}`);
 		}
 		const argsString = this._argsParse(args);
+		const qService = shellQuote(service);
 
 		if (VersionCompare.satisfies(this.version, '^1.0.0')) {
-			return `${this.path}/manage.py --service "${service}" --${option} ${argsString}`.trim();
+			return `${this.path}/manage.py --service ${qService} --${option} ${argsString}`.trim();
 		}
 		else if (VersionCompare.ge(this.version, '2.0.0')) {
-			return `${this.path}/manage.py ${option} --service "${service}" ${argsString}`.trim();
+			return `${this.path}/manage.py ${option} --service ${qService} ${argsString}`.trim();
 		}
 		else {
 			throw new Error(`Unsupported application version ${this.version} for ${this.path} on ${this.host}`);

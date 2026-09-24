@@ -3,6 +3,7 @@ const {validate_session} = require("../../libs/validate_session.mjs");
 const {cmdRunner} = require("../../libs/cmd_runner.mjs");
 const {validateHostService} = require("../../libs/validate_host_service.mjs");
 const {clearTaggedCache} = require("../../libs/cache.mjs");
+const {shellQuote} = require("../../libs/shell_quote.mjs");
 
 const router = express.Router();
 
@@ -34,11 +35,15 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 	}
 
 	let clearNeeded = true, cmd;
+	// `service` is a lookup value resolved via validateHostService, and `action` is checked
+	// against the allowlist above, but both are quoted here defensively before hitting the shell.
+	const qService = shellQuote(service),
+		qAction = shellQuote(action);
 
 	if (action === 'force-stop' || (action === 'stop' && (force === true || force === 'true'))) {
 		// Immediately kill and stop the service without waiting for pre-stop or graceful timeouts
 		clearNeeded = false;
-		cmd = `systemctl kill -s SIGKILL ${service} 2>/dev/null; systemctl stop ${service}`;
+		cmd = `systemctl kill -s SIGKILL ${qService} 2>/dev/null; systemctl stop ${qService}`;
 	}
 	else if (action === 'delayed-stop') {
 		if (!req.appInstallData.options.includes('delayed-stop')) {
@@ -52,7 +57,7 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 		const playerCount = typeof req.serviceData.player_count === 'number' ? req.serviceData.player_count : 0;
 		if (playerCount === 0 || force === true || force === 'true') {
 			clearNeeded = false;
-			cmd = `systemctl stop ${service}`;
+			cmd = `systemctl stop ${qService}`;
 		} else {
 			clearNeeded = false;
 			cmd = req.appInstallData.getServiceCommandString(action, service) + ' &'; // Run in background to avoid waiting for completion
@@ -69,7 +74,7 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 		const playerCount = typeof req.serviceData.player_count === 'number' ? req.serviceData.player_count : 0;
 		if (playerCount === 0 || force === true || force === 'true') {
 			clearNeeded = false;
-			cmd = `systemctl restart ${service}`;
+			cmd = `systemctl restart ${qService}`;
 		} else {
 			clearNeeded = false;
 			cmd = req.appInstallData.getServiceCommandString(action, service) + ' &';
@@ -77,11 +82,11 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, (req
 	}
 	else if (action === 'enable' || action === 'disable') {
 		clearNeeded = true;
-		cmd = `systemctl ${action} ${service}`;
+		cmd = `systemctl ${qAction} ${qService}`;
 	}
 	else {
 		clearNeeded = false;
-		cmd = `systemctl ${action} ${service}`;
+		cmd = `systemctl ${qAction} ${qService}`;
 	}
 
 

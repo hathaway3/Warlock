@@ -2,6 +2,7 @@ import { exec } from 'child_process';
 import { Host } from "../db.js";
 import { logger } from "./logger.mjs";
 import { cmdRunner } from "./cmd_runner.mjs";
+import { shellQuote } from "./shell_quote.mjs";
 
 /**
  * Push a local file to a remote target via SCP
@@ -19,9 +20,12 @@ export async function filePushRunner(target, localFileName, remoteFileName, pull
 		// Confirm the host exists in the database first
 		Host.count({where: {ip: target}})
 			.then(count => {
+				const qRemoteFileName = shellQuote(remoteFileName),
+					qLocalFileName = shellQuote(localFileName);
+
 				let sshCommand = null,
 					cmdOptions = {timeout: 120000, maxBuffer: 1024 * 1024 * 20},
-					permissionCmd = `chown $(stat -c%U "$(dirname "${remoteFileName}")"):$(stat -c%U "$(dirname "${remoteFileName}")") "${remoteFileName}"`;
+					permissionCmd = `chown $(stat -c%U "$(dirname ${qRemoteFileName})"):$(stat -c%U "$(dirname ${qRemoteFileName})") ${qRemoteFileName}`;
 
 				if (count === 0) {
 					return reject({
@@ -34,19 +38,24 @@ export async function filePushRunner(target, localFileName, remoteFileName, pull
 
 				if (target === 'localhost' || target === '127.0.0.1') {
 					if (pullFile) {
-						sshCommand = `cp "${remoteFileName}" "${localFileName}"`;
+						sshCommand = `cp ${qRemoteFileName} ${qLocalFileName}`;
 					}
 					else {
-						sshCommand = `cp "${localFileName}" "${remoteFileName}"`;
+						sshCommand = `cp ${qLocalFileName} ${qRemoteFileName}`;
 					}
 					logger.debug('filePushRunner: Copying local file', remoteFileName);
 				} else {
+					// The remote-side path sits inside an scp `host:path` spec, which is itself
+					// wrapped in double quotes below — single-quoting it here would break that
+					// syntax, so only backslash-escape the characters scp's remote-spec parsing
+					// treats specially.
+					const scpRemoteFileName = String(remoteFileName).replace(/(["\\$`])/g, '\\$1');
 					if (pullFile) {
-						sshCommand = `scp -o LogLevel=quiet -o StrictHostKeyChecking=no root@${target}:"${remoteFileName}" "${localFileName}"`;
+						sshCommand = `scp -o LogLevel=quiet -o StrictHostKeyChecking=no root@${target}:"${scpRemoteFileName}" ${qLocalFileName}`;
 						logger.debug('filePushRunner: Pulling file from ' + target, remoteFileName);
 					}
 					else {
-						sshCommand = `scp -o LogLevel=quiet -o StrictHostKeyChecking=no "${localFileName}" root@${target}:"${remoteFileName}"`;
+						sshCommand = `scp -o LogLevel=quiet -o StrictHostKeyChecking=no ${qLocalFileName} root@${target}:"${scpRemoteFileName}"`;
 						logger.debug('filePushRunner: Pushing file to ' + target, remoteFileName);
 					}
 				}
