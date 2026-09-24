@@ -10,6 +10,12 @@ All notable changes to Warlock will be documented in this file.
     *   **Telemetry:** Integrated and standardized analytics tracking (`libs/push_analytics.mjs`) for basic usage monitoring.
 *   **🔒 Security:**
     *   **Shell command injection hardening:** Added a shared `shellQuote()` helper (`libs/shell_quote.mjs`) and applied it to every user-supplied value interpolated into shell commands in `routes/api/file.js` (file view/rename/save/delete/extract/compress), `libs/file_push_runner.mjs` (scp/cp/chown), `routes/api/service_control.js` (`systemctl`), and `libs/app_install_data.mjs` (`manage.py --service`). Values are now single-quote-escaped instead of loosely wrapped in double quotes, closing `$(...)`/backtick/metacharacter injection via file paths and service names.
+    *   **Session secret:** `app.js` no longer falls back to a hardcoded session-signing secret — a random one is generated and persisted (`libs/session_secret.mjs`) alongside the session store on first run if `SESSION_SECRET` isn't set.
+    *   **Proxmox TLS verification:** Certificate verification now defaults to on; disabling it requires the server operator to explicitly set `PROXMOX_INSECURE=1`. The client can no longer request insecure mode via the API payload.
+    *   **Password policy:** Raised the initial-install minimum from 6 to 8 characters, matching the limit already enforced elsewhere (user creation, CLI).
+    *   **Download temp files:** File downloads now write into a freshly created, unpredictable, owner-only temp directory instead of a fixed, guessable `/tmp` path, closing a symlink-preplant / collision risk.
+*   **Changed:**
+    *   Reworded the login footer from "End-to-end encrypted session" to "Secured with TLS encryption" — the prior claim overstated what TLS-in-transit actually provides.
 
 * **🚀 v1.3.0 - 2026-09-23**
     *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
