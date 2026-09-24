@@ -186,6 +186,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
       {/* Toast Alert */}
       {toastMessage && (
         <div
+          role={toastMessage.type === 'success' ? 'status' : 'alert'}
           className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all ${
             toastMessage.type === 'success'
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
@@ -209,6 +210,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
             onClick={onBack}
             className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors cursor-pointer"
             title="Back to Hosts"
+            aria-label="Back to Hosts"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -303,6 +305,7 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
             <select
               value={timeframe}
               onChange={(e) => setTimeframe(e.target.value)}
+              aria-label="Metrics timeframe"
               className="px-3 py-1.5 bg-[#080a10] border border-indigo-900/40 rounded-xl text-xs text-slate-300 focus:outline-none"
             >
               <option value="hour">Past Hour</option>
@@ -482,6 +485,8 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
                           <button
                             type="button"
                             onClick={() => deleteRuleMutation.mutate(r)}
+                            title={`Delete rule for ${r.to || 'this port'}`}
+                            aria-label={`Delete rule for ${r.to || 'this port'}`}
                             className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-rose-500/10 transition-colors cursor-pointer"
                           >
                             <Trash2 size={14} />
@@ -550,6 +555,8 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
                             <button
                               type="button"
                               onClick={() => deleteCronMutation.mutate(job.identifier)}
+                              title={`Delete cron job ${job.identifier}`}
+                              aria-label={`Delete cron job ${job.identifier}`}
                               className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-rose-500/10 transition-colors cursor-pointer"
                             >
                               <Trash2 size={14} />
@@ -576,8 +583,8 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
       {/* Add Firewall Rule Modal */}
       {showAddRuleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white">Add Firewall Port Rule</h3>
+          <div role="dialog" aria-modal="true" aria-labelledby="add-rule-modal-title" className="w-full max-w-md rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+            <h3 id="add-rule-modal-title" className="text-base font-bold text-white">Add Firewall Port Rule</h3>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -594,8 +601,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
               className="space-y-3"
             >
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Port / Port Range (e.g. 7777 or 27015:27020)</label>
+                <label htmlFor="rule-port" className="block text-xs font-medium text-slate-300 mb-1">Port / Port Range (e.g. 7777 or 27015:27020)</label>
                 <input
+                  id="rule-port"
                   type="text"
                   required
                   placeholder="e.g. 7777"
@@ -607,8 +615,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Protocol</label>
+                  <label htmlFor="rule-protocol" className="block text-xs font-medium text-slate-300 mb-1">Protocol</label>
                   <select
+                    id="rule-protocol"
                     value={ruleProto}
                     onChange={(e) => setRuleProto(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none"
@@ -618,8 +627,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Action</label>
+                  <label htmlFor="rule-action" className="block text-xs font-medium text-slate-300 mb-1">Action</label>
                   <select
+                    id="rule-action"
                     value={ruleAction}
                     onChange={(e) => setRuleAction(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/10 text-xs font-mono text-white focus:outline-none"
@@ -631,8 +641,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Comment / Description</label>
+                <label htmlFor="rule-comment" className="block text-xs font-medium text-slate-300 mb-1">Comment / Description</label>
                 <input
+                  id="rule-comment"
                   type="text"
                   placeholder="e.g. Palworld Dedicated Server"
                   value={ruleComment}
@@ -665,8 +676,8 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
       {/* Add Cron Modal */}
       {showAddCronModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white">Add Scheduled Task</h3>
+          <div role="dialog" aria-modal="true" aria-labelledby="add-cron-modal-title" className="w-full max-w-md rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+            <h3 id="add-cron-modal-title" className="text-base font-bold text-white">Add Scheduled Task</h3>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -681,8 +692,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
               className="space-y-3"
             >
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Schedule (Cron syntax)</label>
+                <label htmlFor="cron-schedule" className="block text-xs font-medium text-slate-300 mb-1">Schedule (Cron syntax)</label>
                 <input
+                  id="cron-schedule"
                   type="text"
                   required
                   placeholder="e.g. 0 4 * * *"
@@ -693,8 +705,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Shell Command</label>
+                <label htmlFor="cron-command" className="block text-xs font-medium text-slate-300 mb-1">Shell Command</label>
                 <input
+                  id="cron-command"
                   type="text"
                   required
                   placeholder="e.g. /usr/bin/warlock-backup.sh"
@@ -705,8 +718,9 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Task Identifier</label>
+                <label htmlFor="cron-identifier" className="block text-xs font-medium text-slate-300 mb-1">Task Identifier</label>
                 <input
+                  id="cron-identifier"
                   type="text"
                   placeholder="e.g. daily-reboot"
                   value={cronIdentifier}
@@ -739,8 +753,8 @@ export const HostDetailsView: React.FC<HostDetailsViewProps> = ({
       {/* SSH Key Modal */}
       {showSshKeyModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
+          <div role="dialog" aria-modal="true" aria-labelledby="ssh-key-modal-title" className="w-full max-w-lg rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4">
+            <h3 id="ssh-key-modal-title" className="text-base font-bold text-white flex items-center gap-2">
               <Key className="w-4 h-4 text-indigo-400" /> Host SSH Public Key
             </h3>
             <p className="text-xs text-slate-300 leading-relaxed">

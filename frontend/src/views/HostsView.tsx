@@ -332,6 +332,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                   <button
                     type="button"
                     title={`Delete host ${host.ip}`}
+                    aria-label={`Delete host ${host.ip}`}
                     onClick={() => setHostToDelete(host.ip)}
                     className="p-1 text-slate-500 hover:text-rose-400 rounded hover:bg-rose-500/10 transition-colors cursor-pointer"
                   >
@@ -374,7 +375,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
       {/* Add Host Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+          <div role="dialog" aria-modal="true" aria-labelledby="add-host-modal-title" className="w-full max-w-2xl rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-indigo-900/30 pb-3">
               <div className="flex items-center gap-2.5">
@@ -382,13 +383,14 @@ export const HostsView: React.FC<HostsViewProps> = ({
                   <Server size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Add Server Host</h3>
+                  <h3 id="add-host-modal-title" className="text-base font-semibold text-white">Add Server Host</h3>
                   <p className="text-xs text-slate-400">Enroll or deploy a Linux host into your Warlock fleet</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={handleCloseAddModal}
+                aria-label="Close"
                 className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <X size={18} />
@@ -465,7 +467,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                     <p className="text-xs text-slate-400">Generating secure one-time enrollment token...</p>
                   </div>
                 ) : enrollmentError ? (
-                  <div className="p-4 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 text-xs">
+                  <div role="alert" className="p-4 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 text-xs">
                     <div className="flex items-center gap-2 text-rose-400 font-semibold">
                       <AlertTriangle size={15} className="shrink-0" />
                       <span>{enrollmentError}</span>
@@ -604,10 +606,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        <label htmlFor="pve-host" className="block text-[11px] font-medium text-slate-300 mb-1">
                           Proxmox Host URL
                         </label>
                         <input
+                          id="pve-host"
                           type="text"
                           placeholder="e.g. https://192.168.1.50:8006"
                           value={pveHost}
@@ -617,10 +620,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        <label htmlFor="pve-user" className="block text-[11px] font-medium text-slate-300 mb-1">
                           API Token User
                         </label>
                         <input
+                          id="pve-user"
                           type="text"
                           placeholder="root@pam"
                           value={pveUser}
@@ -630,10 +634,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        <label htmlFor="pve-token-id" className="block text-[11px] font-medium text-slate-300 mb-1">
                           API Token ID
                         </label>
                         <input
+                          id="pve-token-id"
                           type="text"
                           placeholder="warlock"
                           value={pveTokenId}
@@ -643,10 +648,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                        <label htmlFor="pve-secret" className="block text-[11px] font-medium text-slate-300 mb-1">
                           API Token Secret
                         </label>
                         <input
+                          id="pve-secret"
                           type="password"
                           placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                           value={pveSecret}
@@ -670,6 +676,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
 
                     {pveStatus && (
                       <div
+                        role={pveStatus.type === 'error' ? 'alert' : 'status'}
                         className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
                           pveStatus.type === 'success'
                             ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
@@ -691,10 +698,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                            <label htmlFor="pve-node" className="block text-[11px] font-medium text-slate-300 mb-1">
                               Target Node
                             </label>
                             <select
+                              id="pve-node"
                               value={pveSelectedNode}
                               onChange={(e) => {
                                 setPveSelectedNode(e.target.value);
@@ -714,10 +722,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                            <label htmlFor="pve-ct-hostname" className="block text-[11px] font-medium text-slate-300 mb-1">
                               Container Hostname
                             </label>
                             <input
+                              id="pve-ct-hostname"
                               type="text"
                               value={pveCtHostname}
                               onChange={(e) => setPveCtHostname(e.target.value)}
@@ -726,11 +735,12 @@ export const HostsView: React.FC<HostsViewProps> = ({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                            <label htmlFor="pve-storage" className="block text-[11px] font-medium text-slate-300 mb-1">
                               Storage Pool
                             </label>
                             {pveNodes.find((n) => n.node === pveSelectedNode)?.storages?.length ? (
                               <select
+                                id="pve-storage"
                                 value={pveSelectedStorage}
                                 onChange={(e) => setPveSelectedStorage(e.target.value)}
                                 className="w-full px-3 py-1.5 rounded-lg bg-black/60 border border-indigo-900/40 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -745,6 +755,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                               </select>
                             ) : (
                               <input
+                                id="pve-storage"
                                 type="text"
                                 value={pveSelectedStorage}
                                 onChange={(e) => setPveSelectedStorage(e.target.value)}
@@ -755,14 +766,15 @@ export const HostsView: React.FC<HostsViewProps> = ({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                            <span className="block text-[11px] font-medium text-slate-300 mb-1">
                               Cores / RAM (MB)
-                            </label>
+                            </span>
                             <div className="flex gap-2">
                               <input
                                 type="number"
                                 min={1}
                                 max={64}
+                                aria-label="CPU cores"
                                 value={proxmoxCores}
                                 onChange={(e) => setProxmoxCores(Number(e.target.value))}
                                 className="w-1/2 px-3 py-1.5 rounded-lg bg-black/60 border border-indigo-900/40 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -771,6 +783,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                                 type="number"
                                 min={512}
                                 step={512}
+                                aria-label="RAM in megabytes"
                                 value={proxmoxRam}
                                 onChange={(e) => setProxmoxRam(Number(e.target.value))}
                                 className="w-1/2 px-3 py-1.5 rounded-lg bg-black/60 border border-indigo-900/40 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -779,14 +792,15 @@ export const HostsView: React.FC<HostsViewProps> = ({
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-medium text-slate-300 mb-1">
+                            <span className="block text-[11px] font-medium text-slate-300 mb-1">
                               Disk (GB) / Bridge Network
-                            </label>
+                            </span>
                             <div className="flex gap-2">
                               <input
                                 type="number"
                                 min={5}
                                 max={1000}
+                                aria-label="Disk size in gigabytes"
                                 value={proxmoxDisk}
                                 onChange={(e) => setProxmoxDisk(Number(e.target.value))}
                                 className="w-1/2 px-3 py-1.5 rounded-lg bg-black/60 border border-indigo-900/40 text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -794,6 +808,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                               />
                               <input
                                 type="text"
+                                aria-label="Bridge network interface"
                                 value={proxmoxBridge}
                                 onChange={(e) => setProxmoxBridge(e.target.value)}
                                 className="w-1/2 px-3 py-1.5 rounded-lg bg-black/60 border border-indigo-900/40 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
@@ -825,10 +840,11 @@ export const HostsView: React.FC<HostsViewProps> = ({
             {activeAddTab === 'manual' && (
               <form onSubmit={handleAddHostSubmit} className="space-y-4 pt-1">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label htmlFor="host-ip-input" className="block text-xs font-medium text-slate-300 mb-1.5">
                     Hostname or IP Address
                   </label>
                   <input
+                    id="host-ip-input"
                     type="text"
                     autoFocus
                     placeholder="e.g. 192.168.1.100 or localhost"
@@ -843,7 +859,7 @@ export const HostsView: React.FC<HostsViewProps> = ({
                 </div>
 
                 {errorMsg && (
-                  <div className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 text-xs">
+                  <div role="alert" className="p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2 text-xs">
                     <div className="flex items-center gap-2 text-rose-400 font-semibold">
                       <AlertTriangle size={15} className="shrink-0" />
                       <span>{errorMsg}</span>
@@ -920,8 +936,8 @@ export const HostsView: React.FC<HostsViewProps> = ({
       {/* Delete Host Confirmation Modal */}
       {hostToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-rose-900/40 bg-[#0e1320] p-5 shadow-2xl space-y-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-host-modal-title" className="w-full max-w-sm rounded-2xl border border-rose-900/40 bg-[#0e1320] p-5 shadow-2xl space-y-4">
+            <h3 id="delete-host-modal-title" className="text-sm font-semibold text-white flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-rose-400" />
               <span>Remove Host</span>
             </h3>

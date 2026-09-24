@@ -168,6 +168,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className="hidden sm:flex bg-[#12141c] border border-indigo-900/30 rounded-lg p-0.5">
             <button
               onClick={() => setViewMode('cards')}
+              aria-pressed={viewMode === 'cards'}
               className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'cards' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
               }`}
@@ -177,6 +178,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
             <button
               onClick={() => setViewMode('table')}
+              aria-pressed={viewMode === 'table'}
               className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'table' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'
               }`}
@@ -241,7 +243,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {actionError && (
-        <div className="p-4 bg-red-950/40 border border-red-800/50 rounded-lg text-sm text-red-300 flex items-center justify-between">
+        <div role="alert" className="p-4 bg-red-950/40 border border-red-800/50 rounded-lg text-sm text-red-300 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-red-400" />
             <span>{actionError}</span>
@@ -344,6 +346,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               disabled={isStarting}
                               onClick={() => controlMutation.mutate({ guid: svc.guid, host: svc.host, service: svc.service, action: 'start' })}
                               title="Start Server"
+                              aria-label="Start Server"
                               className="p-1.5 rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 transition-colors cursor-pointer disabled:opacity-50"
                             >
                               <Play size={14} />
@@ -354,6 +357,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                                 disabled={isStopping}
                                 onClick={() => controlMutation.mutate({ guid: svc.guid, host: svc.host, service: svc.service, action: 'stop' })}
                                 title="Stop Server"
+                                aria-label="Stop Server"
                                 className="p-1.5 rounded bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/30 transition-colors cursor-pointer disabled:opacity-50"
                               >
                                 <Square size={14} />
@@ -368,6 +372,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               <button
                                 onClick={() => controlMutation.mutate({ guid: svc.guid, host: svc.host, service: svc.service, action: 'restart' })}
                                 title="Restart Server"
+                                aria-label="Restart Server"
                                 className="p-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors cursor-pointer"
                               >
                                 <RefreshCw size={14} />
@@ -489,6 +494,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </button>
                       <button
                         onClick={() => controlMutation.mutate({ guid: svc.guid, host: svc.host, service: svc.service, action: 'restart' })}
+                        title="Restart Server"
+                        aria-label="Restart Server"
                         className="min-h-[44px] px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
                       >
                         <RefreshCw size={14} />
@@ -514,14 +521,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Install Game Application Modal */}
       {isInstallModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+          <div role="dialog" aria-modal="true" aria-labelledby="install-modal-title" className="w-full max-w-2xl rounded-2xl border border-indigo-900/40 bg-[#0e1320] p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-indigo-900/30 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                   <Server size={18} />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Install Game Server</h3>
+                  <h3 id="install-modal-title" className="text-base font-semibold text-white">Install Game Server</h3>
                   <p className="text-xs text-slate-400">Deploy a dedicated game application onto a cluster host</p>
                 </div>
               </div>
@@ -529,6 +536,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 type="button"
                 disabled={isInstalling}
                 onClick={handleCloseInstallModal}
+                aria-label="Close"
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer disabled:opacity-40"
               >
                 <X size={18} />
@@ -547,8 +555,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 )}
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Select Game Application</label>
+                  <label htmlFor="install-app-select" className="block text-xs font-medium text-slate-300 mb-1.5">Select Game Application</label>
                   <select
+                    id="install-app-select"
                     value={selectedAppGuid}
                     onChange={(e) => setSelectedAppGuid(e.target.value)}
                     required
@@ -564,8 +573,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Select Target Host</label>
+                  <label htmlFor="install-host-select" className="block text-xs font-medium text-slate-300 mb-1.5">Select Target Host</label>
                   <select
+                    id="install-host-select"
                     value={selectedHostIp}
                     onChange={(e) => setSelectedHostIp(e.target.value)}
                     required
@@ -583,10 +593,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label htmlFor="install-options-input" className="block text-xs font-medium text-slate-300 mb-1.5">
                     Installation Flags & Options <span className="text-slate-500 font-normal">(optional)</span>
                   </label>
                   <input
+                    id="install-options-input"
                     type="text"
                     placeholder="e.g. --branch=main or custom flags"
                     value={installOptions}
