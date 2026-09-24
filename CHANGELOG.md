@@ -20,10 +20,16 @@ All notable changes to Warlock will be documented in this file.
     *   `frontend/vite.config.ts` no longer emits sourcemaps for production builds (`npm run build`); they're still generated for `--mode development` builds.
 *   **Fixed:**
     *   Removed placeholder/stub scripts under `scripts/install-warlock.sh`, `scripts/update-warlock.sh`, `scripts/uninstall-warlock.sh`, and `scripts/bootstrap.sh` that shadow-named and did nothing, left over from an earlier pass. Hardened the real root-level `bootstrap.sh` and `uninstall-warlock.sh` with `set -euo pipefail`.
+    *   **`npm run build` was broken on `main`:** `ApiClient.request()` never gained a `signal` parameter when `AbortSignal` support was added, so every call site passing one failed `tsc -b` type-checking (CI never ran `npm run build`, only tests/lint, so this went undetected). Fixed the signature and threaded the signal into the underlying `fetch` call.
+    *   Corrected 5 stale/incorrect type mismatches in frontend test mocks (`AppRouting.test.tsx`, `HostDetailsView.test.tsx`) that surfaced once test files were included in type-checking (see Testing/CI below).
 *   **Repo Hygiene:**
     *   Stopped committing the built SPA (`public/dist/`) and the local JetBrains project config (`.idea/`, including a `dataSources.xml` pointing at a local sqlite path) — both untracked and gitignored; files remain on disk locally.
     *   Removed the unused `@testing-library/jest-dom` frontend devDependency.
+*   **Testing / CI:**
     *   Added `.github/dependabot.yml` for npm (root + `frontend/`) and GitHub Actions.
+    *   `frontend/tsconfig.app.json` no longer excludes `src/__tests__` from `tsc -b`, so test files are now type-checked as part of the build.
+    *   Added a `shellcheck` step to `ci-gate.yml` (error severity only) covering the root and `scripts/` shell scripts.
+    *   `sync-release.yml`: pinned `actions/checkout` to `@v4` (matching the other workflows) and replaced its arbitrary `git branch -r --contains | head -n 1` branch detection with a deterministic `git merge-base --is-ancestor` check.
 
 * **🚀 v1.3.0 - 2026-09-23**
     *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
