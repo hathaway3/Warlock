@@ -1,127 +1,26 @@
-# Warlock - Remote Server Management System
+# Warlock Project - Development Guide
 
-In this repo prefer grouped declarations:
-- Group related `const`/`let` at the top of the function/block scope.
-- Use a single `const` declaration with comma-separated identifiers when appropriate.
-- Avoid scattering small `const`/`let` statements across the body.
-  (Used by humans, linters and Copilot prompts.)
+## Overview
+Warlock is a sophisticated, containerized platform designed for managing and playing networked game services. The system is built upon a modern **React Single Page Application (SPA) frontend** that communicates with a robust **Express 5 API backend**.
 
-## Architecture Overview
-Warlock is an Express.js web application that provides remote management for game servers via SSH. 
-The system consists of a Node.js backend (`app.js`) serving static HTML files with embedded 
-JavaScript frontends that communicate with remote Linux servers.
+### Architecture Breakdown
+*   **Client (Frontend):** React SPA. Handles all user interface logic, state management, and direct API calls.
+*   **Server (Backend):** Node.js/Express 5. Handles authentication, routing, business logic, database interaction (Sequelize/SQLite), and service management.
+*   **Communication:** Communication is via RESTful endpoints, following a standard JSON payload structure and utilizing Bearer Tokens for authorization.
 
-Since this system is designed for package installing and system management,
-all operations are performed with root privileges via SSH commands.
+### Core Conventions
+*   **API Versioning:** All API calls should be designed with versioning in mind (e.g., `/api/v2/`).
+*   **Configuration:** Use environment variables (`process.env`) for all secrets and dynamic configurations. Configuration overrides should follow a clear hierarchy (CLI Args > ENV > `app.js` defaults).
+*   **Error Handling:** Always handle both HTTP status codes and business logic errors in the response structure.
 
-## Documentation Operations
+### Developer Rules
+*   **Grouped Declarations:** Adhere strictly to the principle of grouping related declarations (constants, types, functions, routes) within files. Avoid hoisting or scattering related declarations.
+*   **Data Flow:** Follow the principle of centralized security checking. Utility modules (e.g., `libs/auth-utils.js`) must be used for common logic like authentication status checks (`isAuthSkipped()`).
 
-All documentation is to be stored in the `docs/` directory, organized by feature or module.
-Documentation should include:
-- **API Reference**: Detailed descriptions of each API endpoint, including request/response formats and example usage.
-- **Architecture Diagrams**: Visual representations of the system architecture, data flow, and component interactions.
-- **Development Guides**: Step-by-step instructions for setting up the development environment, running the application, and adding new features.
-- **User Manuals**: Guides for end-users on how to use the application, including screenshots and troubleshooting tips.
+### File Structure Reference
+*   `routes/api/*`: Contains the main API middleware and routes.
+*   `libs/`: Contains reusable, pure utility modules (e.g., `auth-utils.js`, `logger.mjs`).
+*   `frontend/`: Contains the entire React/SPA client source code.
 
-## Key Components
-
-### Backend Structure (`app.js`)
-- **Express Server**: Runs on port 3077 (configurable via `PORT` env var)
-- **SSH Command Execution**: All server operations use SSH to execute commands on remote server
-- **Real-time Monitoring**: System stats fetched via custom SSH commands to remote server
-
-### Frontend Architecture (`public/`)
-- **Self-contained HTML files**: Each page has embedded CSS and JavaScript
-- **Real-time Updates**: Uses `setInterval` for periodic API calls (3-second intervals)
-- **Terminal-style UI**: Cyberpunk aesthetic with blue/teal color scheme
-- **API Communication**: Fetch-based requests to backend endpoints
-
-## Critical API Endpoints
-
-### Game Server Management
-- `POST /create-server`: Create new game server instances
-- `POST /server-control`: Start/stop/restart servers (requires `server_id` and `action`)
-- `POST /server-config`: Modify server configurations
-- `POST /player-management`: Handle player operations
-- `POST /backup-restore`: Server backup and restore operations
-
-### File Management
-- `POST /browse-files`: Directory listing with path navigation
-- `POST /view-file`: File content viewing
-- `POST /create-folder`: Directory creation
-- File upload via multer middleware
-
-## Development Workflow
-
-### Running the Application
-```bash
-npm run dev    # Development with nodemon
-npm start      # Production
-```
-
-### Key Dependencies
-- **express**: Web framework
-- **multer**: File upload handling
-- **nodemon**: Development auto-restart
-
-### Remote Server Dependencies
-The remote server must have:
-- SSH access configured for root user
-- Game management scripts (e.g. `manage.py` / `warlock-manager`) per application
-- Standard Unix utilities (ps, df, free, top, etc.) for system monitoring
-
-## Project-Specific Patterns
-
-### SSH Command Structure
-All remote operations execute dynamically against hosts configured in the database:
-```javascript
-// Target host is resolved dynamically from SQLite DB (Host model)
-cmdRunner(targetHost, command);
-```
-
-### Error Handling Convention
-API responses use consistent structure:
-```javascript
-{ success: boolean, error?: string, data?: any }
-```
-
-### Frontend Update Pattern
-Real-time components consume SSE streams:
-```javascript
-// Stream real-time service and host telemetry
-stream('/api/service/stream/...', 'GET', ...);
-```
-
-### CSS Architecture
-- Modern dark cyberpunk palette
-- CSS Container queries and responsive grid layouts
-
-## Integration Points
-
-### Remote Server Communication
-- **SSH Key Authentication**: Uses key-based authentication (`~/.ssh/id_rsa` or host-configured keys) to connect as root to managed hosts
-- **Game Management Scripts**: Dynamically discovered per application installed on each host (`manage.py` v1/v2 API)
-- **System Monitoring**: Custom shell scriptlets executed via `cmdRunner` and streamed via `cmdStreamer`
-
-### File System Operations
-- Upload directory: Remote host handles file storage location
-- File browsing: Directory navigation via SSH commands (`/api/file`)
-- File viewing: Direct file content retrieval via SSH with MIME detection
-
-## Common Operations
-
-### Adding New API Endpoints
-1. Define command in `commandConfigs` object if SSH-based
-2. Use `createCommandEndpoint(commandName)` for standard SSH operations
-3. Add manual endpoint for custom logic requiring special handling
-
-### Adding New Frontend Pages
-1. Create HTML file in `public/` directory
-2. Add route in `app.js`: `app.get('/page', (req, res) => res.sendFile(...))`
-3. Follow established CSS/JS patterns for consistency
-4. Add navigation link in existing pages' header menu
-
-### Debugging Remote Operations
-- SSH commands logged to console during execution
-- Monitor terminal output in browser for real-time feedback
-- Check remote server logs: `/home/steam/VEIN/logs/` (if applicable)
+---
+*This guide was updated to reflect the modern SPA architecture.*
