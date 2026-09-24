@@ -1,0 +1,58 @@
+name: CI Quality Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  ci-gate:
+    name: Run CI Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        # Set the working directory for the job steps to the root of the repository
+        working-directory: .
+
+    steps:
+      # 1. Checkout the code
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      # 2. Set up Node.js environment
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20 # Use a specific LTS version, adjust as needed
+          cache: true
+
+      # 3. Install root dependencies
+      - name: Install root dependencies (npm ci)
+        run: npm ci
+
+      # 4. Install frontend dependencies
+      # Install root dependencies first (if needed for frontend tooling)
+      - name: Install root dependencies for frontend
+        run: npm install
+
+      # Install dependencies inside the frontend directory
+      - name: Install frontend dependencies
+        run: npm install --prefix frontend
+
+      # 5. Run backend tests
+      - name: Run backend tests
+        run: npm run test:backend
+
+      # 6. Run frontend tests
+      - name: Run frontend tests
+        run: npm --prefix frontend test
+
+      # 7. Run static analysis/linting
+      - name: Run root linting checks
+        run: npx oxlint .
+
+      - name: Run frontend linting checks
+        run: npx oxlint ./frontend
