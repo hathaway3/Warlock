@@ -25,3 +25,13 @@ If you have an idea for a new feature:
 2.  The PR body must reference the associated ticket number and summarize the changes.
 3.  The code must pass all linting checks and tests.
 4.  A detailed description of the feature/fix must be provided.
+
+## 🚀 Releasing (maintainers)
+Versioning is [SemVer](https://semver.org/), driven by the `version` in `package.json`.
+
+**Between releases**, every push to `main` publishes a Docker Hub image tagged `dev` and `<version>-dev.<n>` (for example `1.3.0-dev.412`), where `<n>` is the commit count on `main`. Nothing is committed back; the counter is derived at build time.
+
+**To cut a release**, from a clean `main`:
+1. Make sure `CHANGELOG.md`'s `[Unreleased]` section describes the changes.
+2. Run `npm run release -- patch` (or `minor`, `major`, or an explicit `X.Y.Z`). Add `--dry-run` to preview. This bumps the version in all four `package*.json` files, moves `[Unreleased]` under a dated version heading, and creates a `chore(release): vX.Y.Z` commit and an annotated `vX.Y.Z` tag. It never pushes.
+3. Publish with `git push origin main --follow-tags`. The tag triggers the Docker Hub release image and the `release-vX.Y` branch sync.

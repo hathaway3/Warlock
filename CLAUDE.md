@@ -15,6 +15,7 @@ Warlock is a "bring-your-own-server" game server manager. An Express 5 backend (
 - `npm run dev:profile` — same, with `WARLOCK_PROFILE=1` (logs per-SSH-command timings to `warlock-profile.csv`).
 - `npm start` — production start. `npm run docker` — docker-compose dev stack.
 - Frontend HMR: `npm --prefix frontend run dev` (Vite on :3000, proxies `/api` and `/assets/media` to `127.0.0.1:3077`).
+- `npm run release -- <patch|minor|major|X.Y.Z> [--dry-run]` — cut a release: bumps all four `package*.json` version fields, rolls the CHANGELOG `[Unreleased]` section under a dated heading, commits, and tags; never pushes (see CONTRIBUTING.md). Pushes to `main` get an auto-derived `<version>-dev.<commit count>` Docker tag.
 - Account-recovery CLI: `npm run cli -- list-users | create-user | reset-password | reset-2fa | delete-user`.
 - A Vagrant/VMware dev VM setup is documented in `docs/development.md`.
 
