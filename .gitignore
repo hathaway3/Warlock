@@ -1,7 +1,7 @@
 node_modules/
 DEV/
 .env
-.idea/copilot*
+.idea/
 warlock.sqlite
 *.sqlite*
 .session_secret
@@ -9,3 +9,4 @@ warlock.sqlite
 /ssh/
 /data/
 /warlock-profile.csv
+/public/dist/
