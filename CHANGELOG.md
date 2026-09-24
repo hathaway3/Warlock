@@ -33,14 +33,15 @@ All notable changes to Warlock will be documented in this file.
     *   Added test coverage thresholds for both suites: `@vitest/coverage-v8` for the frontend (`vite.config.ts`, run via a new `npm run test:coverage` script to keep the plain single-file `test` script fast) and `--experimental-test-coverage` for the backend (baked into `test:backend`). Thresholds are set a few points below the measured baseline to catch regressions without blocking on the existing gap.
 *   **Documentation:**
     *   Stripped the upstream CMS frontmatter (`title`/`description`/`order`/`sidebar`/`image`) from 8 `docs/*.md` pages — they now start directly with their heading.
-*   **♿ Accessibility (login/install, dashboard, hosts, host details):**
-    *   Associated every form label with its input via `htmlFor`/`id` (previously visual-only); inputs sharing one visual label (e.g. Cores/RAM) get individual `aria-label`s instead.
-    *   Added `aria-label` to icon-only buttons that had no accessible name (delete/start/stop/restart/close actions) — some had only a `title`, several had neither.
+*   **♿ Accessibility (all views):**
+    *   Associated every form label with its input via `htmlFor`/`id` (previously visual-only); fields with no visible label, or sharing one label with a sibling field (e.g. Cores/RAM), get an `aria-label` instead.
+    *   Added `aria-label` to icon-only buttons that had no accessible name (delete/start/stop/restart/close/rename/download/extract actions) — some had only a `title`, several had neither.
     *   Added `role="alert"`/`role="status"` to every error and status banner, and `aria-pressed` to the Cards/Table view toggle.
-    *   Added `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` to all ~8 modals across these views (semantic only — focus trapping and Escape-to-close are deliberately deferred).
-    *   `inputMode="numeric"` and `autoComplete="one-time-code"` on the 2FA code field.
+    *   Added `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` to every modal across the app (login/dashboard/hosts/host-details/settings/service-details/file-manager — semantic only, focus trapping and Escape-to-close are deliberately deferred).
+    *   `inputMode="numeric"` and `autoComplete="one-time-code"` on both 2FA code fields (login and setup).
+    *   **Fixed a real keyboard-operability bug:** 3 places (file/folder rows in the file manager, service and host card titles) used a bare `<div onClick>` with no keyboard support at all — completely unreachable and inoperable without a mouse. Converted to real `<button>` elements; oxlint's jsx-a11y plugin does not catch this pattern here, so it was found by manual audit.
     *   Added a top-level `ErrorBoundary` so a render crash shows a recoverable message instead of a blank white screen.
-    *   Enabled oxlint's `--jsx-a11y-plugin` in CI and both `lint` scripts as a floor against regressions — it does not catch the label-association issue on this codebase's markup, so it isn't a substitute for manual review.
+    *   Enabled oxlint's `--jsx-a11y-plugin` in CI and both `lint` scripts as a floor against regressions — it does not catch the label-association issue or the click-without-keyboard-support issue on this codebase's markup, so it isn't a substitute for manual review.
 
 * **🚀 v1.3.0 - 2026-09-23**
     *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
