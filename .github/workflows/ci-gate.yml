@@ -56,3 +56,9 @@ jobs:
 
       - name: Run frontend linting checks
         run: npx oxlint ./frontend
+
+      # 8. Static analysis for the shell provisioning scripts. Gated at error severity
+      # only — the repo has a backlog of pre-existing warning/info-level findings
+      # (tracked in TODO.md) that aren't safe to blanket-fix without host testing.
+      - name: Run shellcheck on shell scripts
+        run: shellcheck --severity=error bootstrap.sh install-warlock.sh update-warlock.sh uninstall-warlock.sh scripts/*.sh
