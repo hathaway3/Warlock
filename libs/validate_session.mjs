@@ -1,13 +1,14 @@
 import { User, ApiToken } from '../db.js';
 import crypto from 'crypto';
 import { logger } from './logger.mjs';
+import { isAuthSkipped, is2faSkipped } from './auth-utils.js';
 
 export const validate_session = async (req, res, next) => {
 	const isApiRequest = (req.originalUrl && req.originalUrl.startsWith('/api')) ||
 		(req.baseUrl && req.baseUrl.startsWith('/api')) ||
 		(req.path && req.path.startsWith('/api'));
 
-	if (process.env.SKIP_AUTHENTICATION === 'true' || process.env.SKIP_AUTHENTICATION === '1') {
+	if (isAuthSkipped()) {
 		// If authentication is skipped, attach a default user object
 		req.user = {
 			id: 1,
@@ -75,7 +76,7 @@ export const validate_session = async (req, res, next) => {
 				};
 
 				// Redirect to a 2FA setup page if 2FA is not configured and we're not already on 2FA setup endpoints
-				if (!(process.env.SKIP_2FA === 'true' || process.env.SKIP_2FA === '1')) {
+				if (!is2faSkipped()) {
 					const is2faSetupEndpoint = req.baseUrl === '/2fa-setup' || (req.originalUrl && req.originalUrl.startsWith('/api/auth/2fa'));
 					if (!user.secret_2fa && !is2faSetupEndpoint) {
 						if (isApiRequest) {

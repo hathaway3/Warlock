@@ -1,5 +1,6 @@
 const express = require('express');
 const { validate_session } = require('../libs/validate_session.mjs');
+const { isAuthSkipped, is2faSkipped } = require('../libs/auth-utils.js');
 const router = express.Router();
 
 // Get package version (cached via require). Fallback to 'unknown' on error.
@@ -15,8 +16,8 @@ router.get('/', validate_session, (req, res) => {
 	res.render(
 		'settings', {
 			version,
-			twofactor: (!(process.env.SKIP_2FA === 'true' || process.env.SKIP_2FA === '1')),
-			authentication: (!(process.env.SKIP_AUTHENTICATION === 'true' || process.env.SKIP_AUTHENTICATION === '1')),
+			twofactor: !is2faSkipped(),
+			authentication: !isAuthSkipped(),
 		}
 	);
 });

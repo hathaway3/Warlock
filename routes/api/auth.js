@@ -3,6 +3,7 @@ const { User } = require('../../db');
 const { validate_session } = require('../../libs/validate_session.mjs');
 const twofactor = require('node-2fa');
 const { logger } = require('../../libs/logger.mjs');
+const { is2faSkipped } = require('../../libs/auth-utils.js');
 
 const router = express.Router();
 
@@ -24,7 +25,7 @@ router.get('/status', async (req, res) => {
 		if (req.session && req.session.user) {
 			const user = await User.findByPk(req.session.user);
 			if (user) {
-				const skip2FA = process.env.SKIP_2FA === 'true' || process.env.SKIP_2FA === '1';
+				const skip2FA = is2faSkipped();
 				const is2faSatisfied = skip2FA || !user.secret_2fa || !!req.session.twofa_authenticated;
 
 				return res.json({
@@ -92,7 +93,7 @@ router.post('/setup', async (req, res) => {
 			await Host.create({ ip: '127.0.0.1' }).catch(() => {});
 		}
 
-		const skip2FA = process.env.SKIP_2FA === 'true' || process.env.SKIP_2FA === '1';
+		const skip2FA = is2faSkipped();
 		if (skip2FA) {
 			req.session.twofa_authenticated = true;
 		}
@@ -130,7 +131,7 @@ router.post('/login', async (req, res) => {
 		});
 	}
 
-	const skip2FA = process.env.SKIP_2FA === 'true' || process.env.SKIP_2FA === '1';
+	const skip2FA = is2faSkipped();
 
 	try {
 		const user = await User.findOne({ where: { username } });

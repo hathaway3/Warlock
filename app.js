@@ -71,6 +71,15 @@ if (isProfilerEnabled()) {
 	logger.info('Command profiler enabled - metrics will be written to warlock-profile.csv');
 }
 
+// Warn loudly when security bypass flags are active — these are dev-only escape hatches.
+const {isAuthSkipped, is2faSkipped, logSecurityWarning} = require("./libs/auth-utils.js");
+if (isAuthSkipped()) {
+	logSecurityWarning('Authentication Bypass (SKIP_AUTHENTICATION)');
+}
+if (is2faSkipped()) {
+	logSecurityWarning('2FA Bypass (SKIP_2FA)');
+}
+
 
 app.set('view engine', 'ejs')
 
