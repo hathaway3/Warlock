@@ -3,6 +3,18 @@ import { logger } from './logger.mjs';
 import { get_ssh_key } from './get_ssh_key.mjs';
 
 /**
+ * Whether Proxmox VE TLS certificate verification is explicitly disabled via
+ * the PROXMOX_INSECURE environment variable. Intended as an opt-out for
+ * self-signed lab/home Proxmox installs — never enable in production.
+ *
+ * @returns {boolean}
+ */
+export function isProxmoxInsecureAllowed() {
+	const v = process.env.PROXMOX_INSECURE;
+	return v === 'true' || v === '1';
+}
+
+/**
  * Proxmox VE API Client
  *
  * Interacts with Proxmox VE REST API (v2) on port 8006.
@@ -16,9 +28,10 @@ export class ProxmoxClient {
 	 * @param {string} config.tokenUser - Proxmox user (e.g. "root@pam" or "warlock@pve")
 	 * @param {string} config.tokenId - API token ID (e.g. "warlock")
 	 * @param {string} config.tokenSecret - API token secret (UUID)
-	 * @param {boolean} [config.rejectUnauthorized=false] - Whether to enforce SSL cert validation
+	 * @param {boolean} [config.rejectUnauthorized] - Whether to enforce SSL cert validation.
+	 *   Defaults to `true` unless the PROXMOX_INSECURE env var opts out (see `isProxmoxInsecureAllowed`).
 	 */
-	constructor({ host, tokenUser, tokenId, tokenSecret, rejectUnauthorized = false }) {
+	constructor({ host, tokenUser, tokenId, tokenSecret, rejectUnauthorized = !isProxmoxInsecureAllowed() }) {
 		let cleanHost = host.trim().replace(/\/+$/, '');
 		if (!/^https?:\/\//i.test(cleanHost)) {
 			cleanHost = `https://${cleanHost}`;

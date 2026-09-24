@@ -428,14 +428,14 @@ class ApiClient {
     });
   }
 
-  async testProxmox(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string; rejectUnauthorized?: boolean }): Promise<{ success: boolean; message?: string; version?: any; error?: string }> {
+  async testProxmox(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string }): Promise<{ success: boolean; message?: string; version?: any; error?: string }> {
     return this.request<{ success: boolean; message?: string; version?: any; error?: string }>('/api/proxmox/test', {
       method: 'POST',
       body: JSON.stringify(config),
     });
   }
 
-  async getProxmoxNodes(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string; rejectUnauthorized?: boolean }): Promise<{ success: boolean; nodes?: any[]; error?: string }> {
+  async getProxmoxNodes(config: { host: string; tokenUser: string; tokenId: string; tokenSecret: string }): Promise<{ success: boolean; nodes?: any[]; error?: string }> {
     return this.request<{ success: boolean; nodes?: any[]; error?: string }>('/api/proxmox/nodes', {
       method: 'POST',
       body: JSON.stringify(config),
@@ -447,7 +447,6 @@ class ApiClient {
     tokenUser: string;
     tokenId: string;
     tokenSecret: string;
-    rejectUnauthorized?: boolean;
     node: string;
     hostname?: string;
     storage?: string;

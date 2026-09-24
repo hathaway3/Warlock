@@ -198,7 +198,6 @@ export const HostsView: React.FC<HostsViewProps> = ({
         tokenUser: pveUser.trim(),
         tokenId: pveTokenId.trim(),
         tokenSecret: pveSecret.trim(),
-        rejectUnauthorized: false,
       });
 
       if (res.success && res.nodes && res.nodes.length > 0) {
@@ -243,7 +242,6 @@ export const HostsView: React.FC<HostsViewProps> = ({
         memory: proxmoxRam,
         disk: proxmoxDisk,
         bridge: proxmoxBridge,
-        rejectUnauthorized: false,
       });
 
       if (res.success) {

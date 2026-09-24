@@ -66,7 +66,7 @@ For `/api/*` paths it returns JSON 401/403 with a `code`; page routes redirect t
 The backend is a CJS/ESM hybrid: `app.js` and `routes/*.js` are CommonJS; domain logic in `libs/*.mjs` is ESM, loaded via `require()`. This relies on Node ≥ 24's `require(esm)` support — do not lower the Node requirement. Match the module style of the file you are editing.
 
 ## Key Environment Variables
-`PORT` (default 3077), `IP` (bind address; use `0.0.0.0` inside Docker), `DB_PATH`, `SESSION_SECRET`, `COOKIE_SECURE`, `USE_LEGACY_UI`, `SKIP_AUTOMATIONS`, `SKIP_AUTHENTICATION`, `SKIP_2FA`, `WARLOCK_PROFILE`. All secrets must come from the environment, and services must fail closed when configuration is missing or invalid.
+`PORT` (default 3077), `IP` (bind address; use `0.0.0.0` inside Docker), `DB_PATH`, `SESSION_SECRET` (if unset, a random secret is generated and persisted next to the database on first run), `COOKIE_SECURE`, `USE_LEGACY_UI`, `SKIP_AUTOMATIONS`, `SKIP_AUTHENTICATION`, `SKIP_2FA`, `WARLOCK_PROFILE`, `PROXMOX_INSECURE` (disables TLS certificate verification for Proxmox VE API calls — only for self-signed lab/home installs, never production). All secrets must come from the environment, and services must fail closed when configuration is missing or invalid.
 
 ## Conventions
 

@@ -19,10 +19,10 @@ async function getProxmoxClient(config) {
  * Verify Proxmox VE connection credentials
  *
  * POST /api/proxmox/test
- * Payload: { host, tokenUser, tokenId, tokenSecret, rejectUnauthorized }
+ * Payload: { host, tokenUser, tokenId, tokenSecret }
  */
 router.post('/test', validate_session, async (req, res) => {
-	const { host, tokenUser, tokenId, tokenSecret, rejectUnauthorized = false } = req.body || {};
+	const { host, tokenUser, tokenId, tokenSecret } = req.body || {};
 
 	if (!host || !tokenUser || !tokenId || !tokenSecret) {
 		return res.status(400).json({
@@ -32,7 +32,8 @@ router.post('/test', validate_session, async (req, res) => {
 	}
 
 	try {
-		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret, rejectUnauthorized });
+		// TLS verification policy is controlled server-side (PROXMOX_INSECURE env var), never by the client.
+		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret });
 		const version = await client.getVersion();
 		return res.json({
 			success: true,
@@ -55,7 +56,7 @@ router.post('/test', validate_session, async (req, res) => {
  * Payload: { host, tokenUser, tokenId, tokenSecret }
  */
 router.post('/nodes', validate_session, async (req, res) => {
-	const { host, tokenUser, tokenId, tokenSecret, rejectUnauthorized = false } = req.body || {};
+	const { host, tokenUser, tokenId, tokenSecret } = req.body || {};
 
 	if (!host || !tokenUser || !tokenId || !tokenSecret) {
 		return res.status(400).json({
@@ -65,7 +66,8 @@ router.post('/nodes', validate_session, async (req, res) => {
 	}
 
 	try {
-		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret, rejectUnauthorized });
+		// TLS verification policy is controlled server-side (PROXMOX_INSECURE env var), never by the client.
+		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret });
 		const nodes = await client.getNodes();
 
 		const nodesWithStorage = await Promise.all(
@@ -125,7 +127,6 @@ router.post('/provision', validate_session, async (req, res) => {
 		tokenUser,
 		tokenId,
 		tokenSecret,
-		rejectUnauthorized = false,
 		node,
 		hostname = 'warlock-game-node',
 		storage = 'local-lvm',
@@ -143,7 +144,8 @@ router.post('/provision', validate_session, async (req, res) => {
 	}
 
 	try {
-		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret, rejectUnauthorized });
+		// TLS verification policy is controlled server-side (PROXMOX_INSECURE env var), never by the client.
+		const client = await getProxmoxClient({ host, tokenUser, tokenId, tokenSecret });
 
 		// 1. Create the container with Warlock SSH key injected
 		const createResult = await client.createDebianLxc({
