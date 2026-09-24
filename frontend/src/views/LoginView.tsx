@@ -126,7 +126,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </p>
 
           {error && (
-            <div className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+            <div role="alert" className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{error}</span>
             </div>
@@ -137,12 +137,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <>
                 {/* Username */}
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
+                  <label htmlFor="login-username" className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
                     {isInitialInstall ? 'Admin Username' : 'Username'}
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
+                      id="login-username"
                       type="text"
                       autoFocus
                       required
@@ -156,12 +157,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* Password */}
                 <div>
-                  <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
+                  <label htmlFor="login-password" className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
                     Password
                   </label>
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
+                      id="login-password"
                       type="password"
                       required
                       value={password}
@@ -175,12 +177,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 {/* Confirm Password (only on initial install) */}
                 {isInitialInstall && (
                   <div>
-                    <label className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
+                    <label htmlFor="login-confirm-password" className="block text-xs font-mono text-slate-300 mb-1.5 uppercase tracking-wider">
                       Confirm Password
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
+                        id="login-confirm-password"
                         type="password"
                         required
                         value={confirmPassword}
@@ -195,13 +198,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
             ) : (
               /* 2FA Code Input */
               <div>
-                <label className="block text-xs font-mono text-cyan-400 mb-1.5 uppercase tracking-wider">
+                <label htmlFor="login-2fa-code" className="block text-xs font-mono text-cyan-400 mb-1.5 uppercase tracking-wider">
                   6-Digit Verification Code
                 </label>
                 <div className="relative">
                   <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" />
                   <input
+                    id="login-2fa-code"
                     type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
                     autoFocus
                     maxLength={6}
                     required
