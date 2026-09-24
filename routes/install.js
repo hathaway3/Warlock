@@ -38,8 +38,8 @@ router.post('/', parseForm, csrfProtection, (req, res) => {
 		return res.render('install', {error: 'Username and password are required.'});
 	}
 
-	if (password.length < 6) {
-		return res.render('install', {error: 'Password must be at least 6 characters long.'});
+	if (password.length < 8) {
+		return res.render('install', {error: 'Password must be at least 8 characters long.'});
 	}
 
 	// Create the initial admin user

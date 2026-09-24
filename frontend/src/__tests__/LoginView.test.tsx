@@ -52,6 +52,20 @@ describe('LoginView Component', () => {
     expect(screen.queryByText(/End-to-end encrypted/i)).toBeNull();
   });
 
+  it('rejects initial-install passwords shorter than 8 characters', () => {
+    const setupSpy = vi.spyOn(api, 'setupAdmin');
+    render(<LoginView onLoginSuccess={vi.fn()} onRequire2faSetup={vi.fn()} isInitialInstall />);
+
+    fireEvent.change(screen.getByPlaceholderText('admin'), { target: { value: 'admin' } });
+    const [passInput, confirmInput] = screen.getAllByPlaceholderText('••••••••••••');
+    fireEvent.change(passInput, { target: { value: 'short1' } });
+    fireEvent.change(confirmInput, { target: { value: 'short1' } });
+    fireEvent.click(screen.getByRole('button', { name: /Initialize Administrator Account/i }));
+
+    expect(screen.getByText(/Password must be at least 8 characters long/i)).toBeDefined();
+    expect(setupSpy).not.toHaveBeenCalled();
+  });
+
   it('switches to 2FA code view if require2fa is returned', async () => {
     vi.spyOn(api, 'login').mockResolvedValue({
       success: false,
