@@ -83,7 +83,7 @@ export const TwoFactorSetupView: React.FC<TwoFactorSetupViewProps> = ({ onSetupC
         {/* Setup Card */}
         <div className="rounded-2xl border border-white/10 bg-[#0d121f]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
           {error && (
-            <div className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+            <div role="alert" className="mb-5 flex items-start gap-2.5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <span>{error}</span>
             </div>
@@ -131,6 +131,7 @@ export const TwoFactorSetupView: React.FC<TwoFactorSetupViewProps> = ({ onSetupC
                     onClick={handleCopySecret}
                     className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
                     title="Copy Secret"
+                    aria-label="Copy Secret"
                   >
                     {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
@@ -156,6 +157,9 @@ export const TwoFactorSetupView: React.FC<TwoFactorSetupViewProps> = ({ onSetupC
                     <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" />
                     <input
                       type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      aria-label="6-digit verification code"
                       autoFocus
                       maxLength={6}
                       required

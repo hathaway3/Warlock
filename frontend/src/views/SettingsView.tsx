@@ -65,7 +65,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {newlyCreatedToken && (
-          <div className="p-4 bg-emerald-950/40 border border-emerald-500/50 rounded-lg space-y-2">
+          <div role="status" className="p-4 bg-emerald-950/40 border border-emerald-500/50 rounded-lg space-y-2">
             <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
               <ShieldCheck size={18} /> API Token Created Successfully
             </div>
@@ -76,6 +76,7 @@ export const SettingsView: React.FC = () => {
               <input
                 type="text"
                 readOnly
+                aria-label="Newly created API token"
                 value={newlyCreatedToken}
                 className="flex-1 px-3 py-2 bg-black/50 border border-emerald-500/40 rounded font-mono text-xs text-emerald-300 select-all"
               />
@@ -101,8 +102,9 @@ export const SettingsView: React.FC = () => {
           className="flex flex-col sm:flex-row gap-3 items-end p-4 bg-black/20 rounded-lg border border-indigo-950/40"
         >
           <div className="flex-1 w-full">
-            <label className="block text-xs font-medium text-slate-400 mb-1">Token Name / Description</label>
+            <label htmlFor="token-name" className="block text-xs font-medium text-slate-400 mb-1">Token Name / Description</label>
             <input
+              id="token-name"
               type="text"
               placeholder="e.g. Discord Bot or Grafana Scraper"
               value={tokenName}
@@ -113,8 +115,9 @@ export const SettingsView: React.FC = () => {
           </div>
 
           <div className="w-full sm:w-36">
-            <label className="block text-xs font-medium text-slate-400 mb-1">Expiration</label>
+            <label htmlFor="token-expiration" className="block text-xs font-medium text-slate-400 mb-1">Expiration</label>
             <select
+              id="token-expiration"
               value={expiresIn}
               onChange={(e) => setExpiresIn(e.target.value)}
               className="w-full px-3 py-2 bg-[#0a0b0f] border border-indigo-900/30 rounded text-sm text-white focus:outline-none focus:border-indigo-500"
@@ -164,6 +167,7 @@ export const SettingsView: React.FC = () => {
                     <td className="py-3 px-3 text-right">
                       <button
                         title="Revoke Token"
+                        aria-label={`Revoke token ${token.name}`}
                         onClick={() => revokeTokenMutation.mutate(token.id)}
                         className="p-1.5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded transition-colors cursor-pointer"
                       >
