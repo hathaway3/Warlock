@@ -4,6 +4,7 @@ const { cmdRunner } = require("../../libs/cmd_runner.mjs");
 const { filePushRunner } = require("../../libs/file_push_runner.mjs");
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const { Host } = require('../../db');
 const { logger } = require('../../libs/logger.mjs');
 const {buildRemoteExec} = require("../../libs/build_remote_exec.mjs");
@@ -43,17 +44,22 @@ router.get('/:host', validate_session, (req, res) => {
 		}
 
 		if (forceDownload) {
-			// Create a temporary file to download the file to
-			const tempFile = `/tmp/warlock_download_${Date.now()}_${path.basename(filePath)}`;
+			// Download into a freshly created, unpredictable, owner-only temp directory rather than
+			// a fixed /tmp/<timestamp>_<basename> path, to avoid symlink pre-planting and filename
+			// collisions between concurrent requests in the shared /tmp directory.
+			const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'warlock_download_'));
+			const tempFile = path.join(tempDir, path.basename(filePath));
+			const cleanupTempDir = () => fs.promises.rm(tempDir, {recursive: true, force: true}).catch(() => {});
+
 			filePushRunner(host, tempFile, filePath, true).then(() => {
 				return res.download(tempFile, path.basename(filePath), (err) => {
-					// Remove the temporary file asynchronously after download
-					fs.promises.unlink(tempFile).catch(() => {});
+					cleanupTempDir();
 					if (err) {
 						logger.error('File download error:', err);
 					}
 				});
 			}).catch(e => {
+				cleanupTempDir();
 				return res.json({
 					success: false,
 					error: `Cannot download file: ${getErrorMessage(e)}`
