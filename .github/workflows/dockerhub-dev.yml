@@ -15,6 +15,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Full history so the commit count below is stable and monotonic
+          fetch-depth: 0
+
+      - name: Compute dev version
+        id: version
+        run: |
+          BASE=$(node -p "require('./package.json').version")
+          COUNT=$(git rev-list --count HEAD)
+          echo "dev=${BASE}-dev.${COUNT}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -34,4 +44,6 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/warlock:dev
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/warlock:dev
+            ${{ secrets.DOCKERHUB_USERNAME }}/warlock:${{ steps.version.outputs.dev }}
