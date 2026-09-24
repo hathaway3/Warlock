@@ -12,6 +12,17 @@ export default defineConfig(({ mode }) => ({
   test: {
     environment: 'jsdom',
     globals: true,
+    coverage: {
+      provider: 'v8',
+      // Baseline floor set a few points below current coverage to catch regressions
+      // without blocking on the existing gap; raise these as coverage improves.
+      thresholds: {
+        statements: 30,
+        branches: 30,
+        functions: 18,
+        lines: 30,
+      },
+    },
   },
   server: {
     port: 3000,

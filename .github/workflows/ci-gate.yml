@@ -46,9 +46,9 @@ jobs:
       - name: Run backend tests
         run: npm run test:backend
 
-      # 6. Run frontend tests
+      # 6. Run frontend tests (with coverage threshold enforcement)
       - name: Run frontend tests
-        run: npm --prefix frontend test
+        run: npm --prefix frontend run test:coverage
 
       # 7. Run static analysis/linting
       - name: Run root linting checks
