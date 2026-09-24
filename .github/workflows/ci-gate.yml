@@ -55,7 +55,7 @@ jobs:
         run: npx oxlint .
 
       - name: Run frontend linting checks
-        run: npx oxlint ./frontend
+        run: npx oxlint --jsx-a11y-plugin ./frontend
 
       # 8. Static analysis for the shell provisioning scripts. Gated at error severity
       # only — the repo has a backlog of pre-existing warning/info-level findings
