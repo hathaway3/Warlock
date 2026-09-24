@@ -33,10 +33,10 @@ Warlock is a "bring-your-own-server" game server manager. An Express 5 backend (
 
 ## Architecture
 
-### Two frontends, one API
-- The canonical UI is the React SPA in `frontend/` (React 19 + TypeScript + Tailwind v4 + TanStack Query; xterm.js terminal; CodeMirror 6 editor). It builds into `public/dist/` and is served at `/` (and `/spa`) by `routes/index.js`.
-- A legacy EJS UI (`views/*.ejs` + page routes in `routes/*.js`) is still wired into the app and activates with `USE_LEGACY_UI=true`. It duplicates the SPA and is slated for removal (TODO.md) — extend the SPA by default; touch legacy views only when unavoidable.
-- Both UIs consume the same REST + SSE JSON API in `routes/api/*`. Responses follow the `{ success, ... }` shape (plus `error`/`code` on failure); live data flows over SSE endpoints (e.g. `/api/services/stream`).
+### One frontend, one API
+- The UI is the React SPA in `frontend/` (React 19 + TypeScript + Tailwind v4 + TanStack Query; xterm.js terminal; CodeMirror 6 editor). It builds into `public/dist/` and is served at `/` (and `/spa`) by `routes/index.js`. Auth, install, and 2FA setup are all handled client-side by the SPA against `/api/auth/*`.
+- The former legacy EJS UI has been removed. The only remaining server-rendered page is `views/error.ejs`, a self-contained fallback used by `libs/error_handler.mjs` for non-API, non-JSON requests. `public/assets/` now holds only `media/` (game artwork referenced by `Apps.yaml` and the SPA).
+- The SPA consumes the REST + SSE JSON API in `routes/api/*`. Responses follow the `{ success, ... }` shape (plus `error`/`code` on failure); live data flows over SSE endpoints (e.g. `/api/services/stream`).
 
 ### How host operations work
 Nearly every backend operation against a game host funnels through `libs/cmd_runner.mjs` → `cmdRunner(target, cmd, cacheable, cacheTag)`:
@@ -66,7 +66,7 @@ For `/api/*` paths it returns JSON 401/403 with a `code`; page routes redirect t
 The backend is a CJS/ESM hybrid: `app.js` and `routes/*.js` are CommonJS; domain logic in `libs/*.mjs` is ESM, loaded via `require()`. This relies on Node ≥ 24's `require(esm)` support — do not lower the Node requirement. Match the module style of the file you are editing.
 
 ## Key Environment Variables
-`PORT` (default 3077), `IP` (bind address; use `0.0.0.0` inside Docker), `DB_PATH`, `SESSION_SECRET` (if unset, a random secret is generated and persisted next to the database on first run), `COOKIE_SECURE`, `USE_LEGACY_UI`, `SKIP_AUTOMATIONS`, `SKIP_AUTHENTICATION`, `SKIP_2FA`, `WARLOCK_PROFILE`, `PROXMOX_INSECURE` (disables TLS certificate verification for Proxmox VE API calls — only for self-signed lab/home installs, never production). All secrets must come from the environment, and services must fail closed when configuration is missing or invalid.
+`PORT` (default 3077), `IP` (bind address; use `0.0.0.0` inside Docker), `DB_PATH`, `SESSION_SECRET` (if unset, a random secret is generated and persisted next to the database on first run), `COOKIE_SECURE`, `SKIP_AUTOMATIONS`, `SKIP_AUTHENTICATION`, `SKIP_2FA`, `WARLOCK_PROFILE`, `PROXMOX_INSECURE` (disables TLS certificate verification for Proxmox VE API calls — only for self-signed lab/home installs, never production). All secrets must come from the environment, and services must fail closed when configuration is missing or invalid.
 
 ## Conventions
 

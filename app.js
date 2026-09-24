@@ -46,7 +46,6 @@
 const express = require('express');
 const path = require('path');
 const dotenv = require('dotenv');
-const packageJson = require('./package.json');
 const fs = require('fs');
 
 const app = express();
@@ -83,14 +82,6 @@ if (is2faSkipped()) {
 
 
 app.set('view engine', 'ejs')
-
-// Expose app version for cache busting
-app.locals.appVersion = packageJson.version;
-
-// Helper function for versioned asset URLs (cache busting)
-app.locals.assetUrl = function(assetPath) {
-	return `${assetPath}?v=${packageJson.version}`;
-}
 
 // Top-level crash traps to prevent silent process termination
 process.on('unhandledRejection', (reason, promise) => {
@@ -149,26 +140,6 @@ app.use('/spa', (req, res) => {
 });
 
 app.use('/', require('./routes/index'));
-app.use('/install', require('./routes/install'));
-app.use('/files', require('./routes/files'));
-app.use('/dashboard', require('./routes/dashboard'));
-app.use('/login', require('./routes/login'));
-app.use('/hosts', require('./routes/hosts'));
-app.use('/host/add', require('./routes/host_add'));
-app.use('/host/delete', require('./routes/host_delete'));
-app.use('/host/firewall', require('./routes/host_firewall'));
-app.use('/host/details', require('./routes/host_details'));
-app.use('/service/logs', require('./routes/service_logs'));
-app.use('/service/configure', require('./routes/service_configure'));
-app.use('/service/uninstall', require('./routes/service_uninstall'));
-app.use('/service/details', require('./routes/service_details'));
-app.use('/application/uninstall', require('./routes/application_uninstall'));
-app.use('/application/install', require('./routes/application_install'));
-app.use('/application/backups', require('./routes/application_backups'));
-app.use('/application/configure', require('./routes/application_configure'));
-app.use('/settings', require('./routes/settings'));
-app.use('/2fa-setup', require('./routes/2fa-setup'));
-app.use('/test', require('./routes/test'));
 
 
 /***************************************************************
