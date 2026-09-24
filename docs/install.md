@@ -1,21 +1,3 @@
----
-title: Installation
-description: How to install Warlock Game Server Manager for Linux Dedicated Servers
-order: 10
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-    title: Project Navigation
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-empty-dashboard.webp
----
-
 # Installation
 
 To install Warlock on a server, follow these steps to install the application from source.

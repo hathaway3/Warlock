@@ -1,21 +1,3 @@
----
-title: Hosts
-seotitle: Warlock Hosts
-description: Server host overview for Warlock Game Server Manager
-order: 14
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-hosts.webp
----
-
 # Warlock Server Hosts
 
 Warlock by default provides access to install game servers on the host which it is installed on,

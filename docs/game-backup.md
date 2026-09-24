@@ -1,21 +1,3 @@
----
-title: Game Backup
-seotitle: Warlock Game Backups
-description: Instructions for managing game backups within Warlock
-order: 12
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-game-backup.webp
----
-
 # Game Backups
 
 Most Warlock-compatible game servers provide support for backups, and the web interface makes it easy to manage them.

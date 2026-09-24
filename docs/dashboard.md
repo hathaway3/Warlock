@@ -1,21 +1,3 @@
----
-title: Dashboard
-seotitle: Warlock Dashboard
-description: Dashboard overview for Warlock Game Server Manager
-order: 11
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-dashboard.webp
----
-
 # Warlock Dashboard
 
 The dashboard in Warlock shows an overview of all games installed,

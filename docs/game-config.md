@@ -1,21 +1,3 @@
----
-title: Game Configuration
-seotitle: Warlock Game Configuration
-description: Instructions for managing game installs within Warlock
-order: 12
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-game-config.webp
----
-
 # Game Configuration
 
 Game configuration allows for managing the game binary.

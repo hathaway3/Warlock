@@ -1,20 +1,3 @@
----
-title: Game Install
-description: Instructions for installing a game with Warlock
-order: 12
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-minecraft-install-1.webp
----
-
 # Installing a Game
 
 From the dashboard, click "Install Game" to begin installing a new game server.

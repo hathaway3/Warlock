@@ -1,21 +1,3 @@
----
-title: Files
-seotitle: Access Server Files in Warlock
-description: Information about accessing and managing server files within Warlock Game Server Manager
-order: 14
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-host-files.webp
----
-
 # Warlock File Manager
 
 Warlock provides a web-based file manager for accessing and managing game server files.

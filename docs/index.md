@@ -1,21 +1,3 @@
----
-title: Warlock Game Server Manager
-description: Game Server Manager for Linux Dedicated Servers
-order: 00
-sidebar:
-  - widget: cms-pagelist
-    type: pages
-    layout: widgets/pages-nav-sidebar
-    permalink: "~ /projects/warlock/.*"
-    sort: order
-    title: Project Navigation
-  - widget: cta
-    href: https://github.com/hathaway3/Warlock
-    text: View on GitHub
-image:
-  src: media/warlock-dashboard.webp
----
-
 # Warlock Game Server Manager
 
 Warlock is a web-based dedicated game server manager for Linux servers for a variety of games.
