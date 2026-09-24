@@ -20,7 +20,7 @@ class ApiClient {
     return this.token;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: RequestInit = {}, signal?: AbortSignal): Promise<T> {
     const headers: Record<string, string> = {
       'Accept': 'application/json',
       ...(options.headers as Record<string, string>),
@@ -37,6 +37,7 @@ class ApiClient {
     const response = await fetch(endpoint, {
       ...options,
       headers,
+      signal: signal ?? options.signal,
     });
 
     if (response.status === 401) {
