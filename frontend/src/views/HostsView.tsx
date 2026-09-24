@@ -315,13 +315,15 @@ export const HostsView: React.FC<HostsViewProps> = ({
                   <div className="w-10 h-10 rounded-lg bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                     <Server size={20} />
                   </div>
-                  <div
-                    className={onSelectHost ? 'cursor-pointer group' : ''}
+                  <button
+                    type="button"
+                    disabled={!onSelectHost}
+                    className={`text-left bg-transparent border-0 p-0 ${onSelectHost ? 'cursor-pointer group' : 'cursor-default'}`}
                     onClick={() => onSelectHost && onSelectHost(host.ip)}
                   >
                     <h3 className="font-bold text-white text-base font-mono group-hover:text-cyan-400 transition-colors">{host.ip}</h3>
                     <span className="text-xs text-slate-400">{host.os || 'Linux'}</span>
-                  </div>
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-2">

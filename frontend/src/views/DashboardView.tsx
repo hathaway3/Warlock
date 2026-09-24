@@ -411,15 +411,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div>
                   {/* Top Bar: Name + Status */}
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <div
-                      className={onSelectService ? 'cursor-pointer group/title' : ''}
+                    <button
+                      type="button"
+                      disabled={!onSelectService}
+                      className={`text-left bg-transparent border-0 p-0 ${onSelectService ? 'cursor-pointer group/title' : 'cursor-default'}`}
                       onClick={() => onSelectService && onSelectService(svc.guid, svc.host, svc.service)}
                     >
                       <h3 className="font-bold text-white text-base tracking-wide group-hover/title:text-cyan-400 transition-colors">
                         {svc.name}
                       </h3>
                       <span className="text-xs text-slate-400 font-mono">{svc.host}</span>
-                    </div>
+                    </button>
 
                     <span
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
