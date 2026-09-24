@@ -30,6 +30,9 @@ All notable changes to Warlock will be documented in this file.
     *   `frontend/tsconfig.app.json` no longer excludes `src/__tests__` from `tsc -b`, so test files are now type-checked as part of the build.
     *   Added a `shellcheck` step to `ci-gate.yml` (error severity only) covering the root and `scripts/` shell scripts.
     *   `sync-release.yml`: pinned `actions/checkout` to `@v4` (matching the other workflows) and replaced its arbitrary `git branch -r --contains | head -n 1` branch detection with a deterministic `git merge-base --is-ancestor` check.
+    *   Added test coverage thresholds for both suites: `@vitest/coverage-v8` for the frontend (`vite.config.ts`, run via a new `npm run test:coverage` script to keep the plain single-file `test` script fast) and `--experimental-test-coverage` for the backend (baked into `test:backend`). Thresholds are set a few points below the measured baseline to catch regressions without blocking on the existing gap.
+*   **Documentation:**
+    *   Stripped the upstream CMS frontmatter (`title`/`description`/`order`/`sidebar`/`image`) from 8 `docs/*.md` pages — they now start directly with their heading.
 
 * **🚀 v1.3.0 - 2026-09-23**
     *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
