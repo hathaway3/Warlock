@@ -5,6 +5,10 @@ import crypto from 'crypto';
 import app from '../app.js';
 import { sequelize, User, ApiToken, Host } from '../db.js';
 
+// The route guards localhost adds behind a root check (fail-closed). Adapt expectations
+// so the suite stays green in non-root dev environments while still covering both branches.
+const isRoot = typeof process.getuid !== 'function' || process.getuid() === 0;
+
 test('Host API Management Suite (POST, GET ssh-key, DELETE)', async (t) => {
 	let rawToken, testUser;
 
@@ -91,6 +95,14 @@ test('Host API Management Suite (POST, GET ssh-key, DELETE)', async (t) => {
 			.set('Authorization', `Bearer ${rawToken}`)
 			.send({ ip: '127.0.0.1' });
 
+		if (!isRoot) {
+			// Non-root environment: the route must fail closed and reject the localhost add.
+			assert.strictEqual(res.status, 400);
+			assert.strictEqual(res.body.success, false);
+			assert.match(res.body.error, /run as root|running in Docker/i);
+			return;
+		}
+
 		assert.strictEqual(res.status, 201);
 		assert.strictEqual(res.body.success, true);
 		assert.strictEqual(res.body.host.ip, '127.0.0.1');
@@ -100,7 +112,7 @@ test('Host API Management Suite (POST, GET ssh-key, DELETE)', async (t) => {
 		assert.ok(host);
 	});
 
-	await t.test('POST /api/hosts with duplicate IP returns 400 JSON', async () => {
+	await t.test('POST /api/hosts with duplicate IP returns 400 JSON', { skip: isRoot ? false : 'requires root: localhost add is guarded in non-root environments' }, async () => {
 		const res = await request(app)
 			.post('/api/hosts')
 			.set('Authorization', `Bearer ${rawToken}`)
@@ -111,7 +123,7 @@ test('Host API Management Suite (POST, GET ssh-key, DELETE)', async (t) => {
 		assert.match(res.body.error, /already exists/i);
 	});
 
-	await t.test('DELETE /api/hosts/:host removes host and returns 200 JSON', async () => {
+	await t.test('DELETE /api/hosts/:host removes host and returns 200 JSON', { skip: isRoot ? false : 'requires root: localhost host is never created in non-root environments' }, async () => {
 		const res = await request(app)
 			.delete('/api/hosts/127.0.0.1')
 			.set('Authorization', `Bearer ${rawToken}`);
