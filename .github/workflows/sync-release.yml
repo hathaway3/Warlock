@@ -14,9 +14,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Full history for all branches/tags is required for the merge-base ancestor
+          # checks below — a shallow checkout would make branch detection unreliable.
+          fetch-depth: 0
 
       - name: Set up Git
         run: |
@@ -36,18 +39,20 @@ jobs:
           
           # Get the commit hash that the tag points to
           COMMIT_HASH=$(git rev-parse $TAG_NAME)
-          
-          # Find all remote branches containing this commit
-          # We filter out 'HEAD', the tag itself, and strip the 'origin/' prefix
-          # We take the first result (head -n 1) as our candidate source branch
-          SOURCE_BRANCH=$(git branch -r --contains $COMMIT_HASH | \
-            grep -v 'HEAD' | \
-            grep -v 'tags/' | \
-            sed 's|origin/||' | \
-            head -n 1)
-          
-          # Fallback to main if no specific branch is found (safety net)
-          if [ -z "$SOURCE_BRANCH" ]; then
+
+          # Determine the source branch deterministically instead of picking an arbitrary
+          # entry from `git branch --contains` (whose output order isn't meaningful and
+          # could name an unrelated feature branch that happens to contain the commit).
+          # A release tag's commit is expected to be on `main` (the normal case) or,
+          # when cutting a patch directly on an already-existing release branch, on that
+          # release branch — check in that priority order.
+          if git merge-base --is-ancestor "$COMMIT_HASH" origin/main; then
+            SOURCE_BRANCH="main"
+          elif git ls-remote --exit-code --heads origin "$TARGET_BRANCH" >/dev/null 2>&1 && \
+               git merge-base --is-ancestor "$COMMIT_HASH" "origin/$TARGET_BRANCH"; then
+            SOURCE_BRANCH="$TARGET_BRANCH"
+          else
+            # Fallback to main if the commit isn't reachable from either (safety net)
             SOURCE_BRANCH="main"
           fi
           
