@@ -20,6 +20,7 @@
     "test:backend": "node --test --experimental-test-module-mocks --experimental-test-coverage --test-coverage-exclude=\"tests/**\" --test-coverage-lines=35 --test-coverage-branches=60 --test-coverage-functions=25 tests/*",
     "test:frontend": "npm --prefix frontend run test:coverage",
     "test": "npm run test:backend && npm run test:frontend",
+    "release": "node scripts/release.mjs",
     "lint:backend": "eslint .", "lint:frontend": "npx oxlint --jsx-a11y-plugin frontend"
   },
   "keywords": [
