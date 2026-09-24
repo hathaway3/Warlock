@@ -61,6 +61,7 @@ const {HostMetricsMergeTask} = require("./tasks/host_metrics_merge.mjs");
 const {HostMetricsPollTask} = require("./tasks/host_metrics_poll.mjs");
 const {initializeProfiler, isEnabled: isProfilerEnabled} = require("./libs/cmd_profiler.mjs");
 const {errorHandler} = require("./libs/error_handler.mjs");
+const {getOrCreateSessionSecret} = require("./libs/session_secret.mjs");
 
 // Load environment variables
 dotenv.config();
@@ -117,7 +118,7 @@ const sessionStore = new SQLiteStore({
 
 app.use(session({
 	store: sessionStore,
-	secret: process.env.SESSION_SECRET || 'warlock_secret_key',
+	secret: getOrCreateSessionSecret(sessionDbDir),
 	resave: false, // don't save session if unmodified
 	saveUninitialized: false, // don't create session until something stored
 	cookie: {
