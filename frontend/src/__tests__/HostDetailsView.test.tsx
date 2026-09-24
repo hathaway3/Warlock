@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HostDetailsView } from '../views/HostDetailsView';
 import { api } from '../api/client';
@@ -32,15 +32,10 @@ describe('HostDetailsView Component', () => {
     vi.spyOn(api, 'getHosts').mockResolvedValue([mockHost]);
     vi.spyOn(api, 'getHostMetrics').mockResolvedValue({
       success: true,
-      data: {
-        cpu: [{ timestamp: Date.now(), usage: 15 }],
-        memory: [{ timestamp: Date.now(), usage: 25 }],
-      },
+      data: [{ timestamp: Date.now(), avg_cpu: 15, avg_memory: 25, avg_disk: 40 }],
     });
     vi.spyOn(api, 'getFirewall').mockResolvedValue({
       success: true,
-      installed: true,
-      enabled: true,
       status: 'active',
       rules: [
         { id: 1, to: '8211', action: 'ALLOW', from: 'Anywhere', comment: 'Palworld port' },
@@ -105,7 +100,7 @@ describe('HostDetailsView Component', () => {
   });
 
   it('switches to Files tab and embeds filesystem manager', async () => {
-    vi.spyOn(api, 'getFiles').mockResolvedValue([]);
+    vi.spyOn(api, 'getFiles').mockResolvedValue({ success: true, files: [], path: '/' });
 
     renderWithClient();
 

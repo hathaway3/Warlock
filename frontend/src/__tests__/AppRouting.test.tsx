@@ -15,7 +15,7 @@ describe('App Hash Routing & Deep Linking', () => {
     vi.spyOn(api, 'getAuthStatus').mockResolvedValue({
       success: true,
       authenticated: true,
-      user: { id: 1, username: 'admin', has_2fa: true },
+      user: { id: 1, username: 'admin' },
     });
 
     vi.spyOn(api, 'getServices').mockResolvedValue([]);
