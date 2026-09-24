@@ -16,6 +16,14 @@ All notable changes to Warlock will be documented in this file.
     *   **Download temp files:** File downloads now write into a freshly created, unpredictable, owner-only temp directory instead of a fixed, guessable `/tmp` path, closing a symlink-preplant / collision risk.
 *   **Changed:**
     *   Reworded the login footer from "End-to-end encrypted session" to "Secured with TLS encryption" — the prior claim overstated what TLS-in-transit actually provides.
+    *   Palworld's REST-API requirement (`routes/api/service.js`, `routes/api/service_configs.js`) is now declared via a `requiresRestApi` flag on its `Apps.yaml` entry instead of a hardcoded GUID string comparison.
+    *   `frontend/vite.config.ts` no longer emits sourcemaps for production builds (`npm run build`); they're still generated for `--mode development` builds.
+*   **Fixed:**
+    *   Removed placeholder/stub scripts under `scripts/install-warlock.sh`, `scripts/update-warlock.sh`, `scripts/uninstall-warlock.sh`, and `scripts/bootstrap.sh` that shadow-named and did nothing, left over from an earlier pass. Hardened the real root-level `bootstrap.sh` and `uninstall-warlock.sh` with `set -euo pipefail`.
+*   **Repo Hygiene:**
+    *   Stopped committing the built SPA (`public/dist/`) and the local JetBrains project config (`.idea/`, including a `dataSources.xml` pointing at a local sqlite path) — both untracked and gitignored; files remain on disk locally.
+    *   Removed the unused `@testing-library/jest-dom` frontend devDependency.
+    *   Added `.github/dependabot.yml` for npm (root + `frontend/`) and GitHub Actions.
 
 * **🚀 v1.3.0 - 2026-09-23**
     *   **Backend:** Centralized security checks for authentication and 2FA bypass flags by creating `libs/auth-utils.js`, eliminating duplication and simplifying maintenance.
