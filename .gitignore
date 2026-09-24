@@ -4,6 +4,7 @@ DEV/
 .idea/copilot*
 warlock.sqlite
 *.sqlite*
+.session_secret
 .vagrant/
 /ssh/
 /data/
