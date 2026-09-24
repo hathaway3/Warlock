@@ -60,15 +60,16 @@ router.post('/:guid/:host/:service', validate_session, validateHostService, asyn
 
 	// Multiple updates can be sent in a single request, but run them one-at-a-time.
 	let errors = '';
-	const isPalworld = req.appInstallData.guid === 'e4cd1462-87ec-213b-f0fa-7e2a1ba72e2d';
+	// Some applications (e.g. Palworld) require their REST API enabled for Warlock monitoring;
+	// declared per-app via `requiresRestApi` in Apps.yaml rather than hardcoding a GUID here.
+	const requiresRestApi = req.applicationData?.requiresRestApi === true;
 
 	for (let option in configUpdates) {
 		const value = configUpdates[option];
 
-		// Palworld requires REST API to be enabled for Warlock monitoring and control
-		if (isPalworld && (option === 'RESTAPIEnabled' || option === 'bEnableRESTAPI')) {
+		if (requiresRestApi && (option === 'RESTAPIEnabled' || option === 'bEnableRESTAPI')) {
 			if (value === false || value === 'False' || value === '0' || value === 0) {
-				errors += 'RESTAPIEnabled is required by Warlock and cannot be disabled for Palworld.\n';
+				errors += `RESTAPIEnabled is required by Warlock and cannot be disabled for ${req.applicationData?.title || 'this application'}.\n`;
 				continue;
 			}
 		}

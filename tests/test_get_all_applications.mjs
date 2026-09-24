@@ -31,6 +31,9 @@ test('getAllApplications catalog resolution suite', async (t) => {
 		assert.ok(titles.includes('Minecraft'), 'Catalog should include Minecraft');
 		assert.ok(titles.includes('Palworld'), 'Catalog should include Palworld');
 
+		const palworld = apps.find(a => a.title === 'Palworld');
+		assert.strictEqual(palworld.requiresRestApi, true, 'Palworld should declare requiresRestApi via Apps.yaml (routes/api/service.js and service_configs.js read this instead of hardcoding its GUID)');
+
 		for (const app of apps) {
 			assert.deepStrictEqual(app.installs, [], 'Installs should be empty array when 0 hosts exist');
 		}

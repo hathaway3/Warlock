@@ -87,6 +87,9 @@
   installer: dist/installer.sh
   author: Drew Wort <drew@worttechnologies.tech>
   category: Game Server
+  # Palworld's REST API must stay enabled for Warlock to monitor/control the service;
+  # routes/api/service.js and routes/api/service_configs.js enforce this via this flag.
+  requiresRestApi: true
   supports:
     - "Debian 12, 13"
     - "Ubuntu 24.04"

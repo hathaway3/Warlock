@@ -68,9 +68,10 @@ router.put('/:guid/:host/:service', validate_session, validateHostApplication, (
 				newService = lastLine.split(':')[1].trim();
 			}
 
-			// Palworld requires REST API to be enabled for Warlock monitoring
-			const isPalworld = req.appInstallData.guid === 'e4cd1462-87ec-213b-f0fa-7e2a1ba72e2d';
-			if (isPalworld && newService) {
+			// Some applications (e.g. Palworld) require their REST API enabled for Warlock monitoring;
+			// declared per-app via `requiresRestApi` in Apps.yaml rather than hardcoding a GUID here.
+			const requiresRestApi = req.applicationData?.requiresRestApi === true;
+			if (requiresRestApi && newService) {
 				try {
 					await cmdRunner(req.appInstallData.host, req.appInstallData.getServiceCommandString('set-config', newService, 'RESTAPIEnabled', 'True'));
 				} catch (err) {
