@@ -8,6 +8,8 @@
 # @source https://github.com/hathaway3/Warlock
 #
 
+set -euo pipefail
+
 SERVICE_UNIT_PATH="/etc/systemd/system/warlock.service"
 
 print_help() {

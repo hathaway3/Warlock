@@ -26,7 +26,7 @@
 # @source https://github.com/hathaway3/Warlock
 #
 
-set -e  # Exit on any error
+set -euo pipefail  # Exit on any error, unset variable, or failed pipeline stage
 
 # Color codes for output
 RED='\033[0;31m'
