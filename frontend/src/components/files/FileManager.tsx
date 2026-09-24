@@ -313,6 +313,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* Toast Alert */}
       {actionMessage && (
         <div
+          role={actionMessage.type === 'success' ? 'status' : 'alert'}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold select-none transition-all ${
             actionMessage.type === 'success'
               ? 'bg-emerald-500/20 text-emerald-300 border-b border-emerald-500/30'
@@ -353,6 +354,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
             disabled={currentPath === '/' || currentPath === ''}
             className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             title="Go up one folder"
+            aria-label="Go up one folder"
           >
             <ArrowUp className="w-4 h-4" />
           </button>
@@ -396,6 +398,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
             <input
               type="text"
               placeholder="Search in folder..."
+              aria-label="Search in folder"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               className="w-full pl-8 pr-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50"
@@ -405,6 +408,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
           <button
             type="button"
             onClick={() => setShowNewFolderModal(true)}
+            aria-label="Create new folder"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-medium cursor-pointer transition-colors"
           >
             <FolderPlus className="w-3.5 h-3.5 text-cyan-400" />
@@ -414,6 +418,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
           <button
             type="button"
             onClick={() => setShowNewFileModal(true)}
+            aria-label="Create new file"
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-medium cursor-pointer transition-colors"
           >
             <FilePlus className="w-3.5 h-3.5 text-cyan-400" />
@@ -443,6 +448,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
             onClick={() => loadDirectory(currentPath)}
             disabled={loading}
             title="Refresh"
+            aria-label="Refresh"
             className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
@@ -479,9 +485,10 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                   className="group flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-cyan-500/20 transition-all select-none"
                 >
                   {/* File / Folder Main Link */}
-                  <div
+                  <button
+                    type="button"
                     onClick={() => handleOpenFile(file)}
-                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer bg-transparent border-0 p-0 text-left"
                   >
                     <div className="shrink-0">
                       {isDir ? (
@@ -509,7 +516,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                         <span>{formatDate(file.modified)}</span>
                       </div>
                     </div>
-                  </div>
+                  </button>
 
                   {/* Desktop Metadata Columns */}
                   <div className="hidden sm:flex items-center gap-6 text-xs font-mono text-slate-400 mr-4">
@@ -526,6 +533,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                         type="button"
                         onClick={() => handleOpenFile(file)}
                         title="View / Edit"
+                        aria-label={`View or edit ${file.name}`}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-white/10 transition-colors"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
@@ -537,6 +545,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                         type="button"
                         onClick={() => handleDownloadFile(file.path)}
                         title="Download"
+                        aria-label={`Download ${file.name}`}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-white/10 transition-colors"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -548,6 +557,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                         type="button"
                         onClick={() => handleExtract(file)}
                         title="Extract Archive"
+                        aria-label={`Extract archive ${file.name}`}
                         className="p-1.5 rounded-lg text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-colors"
                       >
                         <Archive className="w-3.5 h-3.5" />
@@ -561,6 +571,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                         setRenameNewName(file.name);
                       }}
                       title="Rename"
+                      aria-label={`Rename ${file.name}`}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
                     >
                       <File className="w-3.5 h-3.5" />
@@ -570,6 +581,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                       type="button"
                       onClick={() => setDeleteTarget(file)}
                       title="Delete"
+                      aria-label={`Delete ${file.name}`}
                       className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -585,17 +597,18 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* CodeMirror Full-featured Editor Modal */}
       {editingFile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-5xl h-[85vh] flex flex-col rounded-2xl border border-white/15 bg-[#0a0d14] shadow-2xl overflow-hidden">
+          <div role="dialog" aria-modal="true" aria-labelledby="file-editor-title" className="relative w-full max-w-5xl h-[85vh] flex flex-col rounded-2xl border border-white/15 bg-[#0a0d14] shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 bg-[#0d121f] border-b border-white/10">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-cyan-400" />
-                <span className="font-mono text-sm font-semibold text-white truncate max-w-md">
+                <span id="file-editor-title" className="font-mono text-sm font-semibold text-white truncate max-w-md">
                   {editingFile.path}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingFile(null)}
+                aria-label="Close"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -624,8 +637,8 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* New Folder Modal */}
       {showNewFolderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <div role="dialog" aria-modal="true" aria-labelledby="new-folder-modal-title" className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
+            <h3 id="new-folder-modal-title" className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <FolderPlus className="w-4 h-4 text-cyan-400" />
               <span>Create New Folder</span>
             </h3>
@@ -634,6 +647,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                 type="text"
                 autoFocus
                 placeholder="Folder name..."
+                aria-label="Folder name"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono mb-4"
@@ -662,8 +676,8 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* New File Modal */}
       {showNewFileModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <div role="dialog" aria-modal="true" aria-labelledby="new-file-modal-title" className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
+            <h3 id="new-file-modal-title" className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <FilePlus className="w-4 h-4 text-cyan-400" />
               <span>Create New File</span>
             </h3>
@@ -672,6 +686,7 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
                 type="text"
                 autoFocus
                 placeholder="e.g. server_override.ini"
+                aria-label="File name"
                 value={newFileName}
                 onChange={(e) => setNewFileName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono mb-4"
@@ -700,14 +715,15 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* Rename Modal */}
       {renameTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
-            <h3 className="text-sm font-semibold text-white mb-3">
+          <div role="dialog" aria-modal="true" aria-labelledby="rename-modal-title" className="w-full max-w-sm rounded-2xl border border-white/15 bg-[#0e1320] p-5 shadow-2xl">
+            <h3 id="rename-modal-title" className="text-sm font-semibold text-white mb-3">
               Rename "{renameTarget.name}"
             </h3>
             <form onSubmit={handleRename}>
               <input
                 type="text"
                 autoFocus
+                aria-label="New name"
                 value={renameNewName}
                 onChange={(e) => setRenameNewName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono mb-4"
@@ -736,8 +752,8 @@ export const FileManager: React.FC<FileManagerProps> = ({ host, initialPath = '/
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-rose-500/30 bg-[#160c12] p-5 shadow-2xl">
-            <h3 className="text-sm font-semibold text-rose-300 mb-2 flex items-center gap-2">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-file-modal-title" className="w-full max-w-sm rounded-2xl border border-rose-500/30 bg-[#160c12] p-5 shadow-2xl">
+            <h3 id="delete-file-modal-title" className="text-sm font-semibold text-rose-300 mb-2 flex items-center gap-2">
               <Trash2 className="w-4 h-4 text-rose-400" />
               <span>Confirm Deletion</span>
             </h3>
